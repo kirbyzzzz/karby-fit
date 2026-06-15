@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>הכושר שלי</title>
+<style>
+:root{
+  --bg:#000;--bg2:#111;--bg3:#1a1a1a;
+  --txt:#fff;--txt2:#888;--txt3:#555;
+  --bdr:rgba(255,255,255,0.07);--bdr2:rgba(255,255,255,0.13);
+  --acc:#AFA9EC;--acc2:#7F77DD;--acc3:#534AB7;
+  --acc-bg:rgba(175,169,236,0.1);--acc-bd:rgba(175,169,236,0.3);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);direction:rtl;max-width:640px;margin:0 auto;padding:14px 14px 90px;font-size:15px}
+button{cursor:pointer;font-family:inherit;font-size:14px;border-radius:10px;border:0.5px solid var(--bdr2);background:var(--bg2);color:var(--txt);padding:9px 16px;transition:opacity .15s}
+button:active{opacity:.6}
+input{font-family:inherit;font-size:14px;background:var(--bg2);border:0.5px solid var(--bdr2);border-radius:10px;padding:10px 13px;color:var(--txt);width:100%}
+input:focus{outline:none;border-color:var(--acc-bd)}
+input::placeholder{color:var(--txt3)}
+.tab-bar{position:fixed;bottom:0;right:0;left:0;background:#111;border-top:0.5px solid #222;display:flex;z-index:99;max-width:640px;margin:auto;padding-bottom:env(safe-area-inset-bottom,6px)}
+.tb{flex:1;border:none;background:transparent;padding:10px 4px 8px;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--txt3);border-radius:0}
+.tb.on{color:var(--acc);font-weight:500}
+.tbi{font-size:22px;line-height:1}
+
+/* Exercise cards */
+.ex-row{background:var(--bg2);border-radius:14px;margin-bottom:6px;overflow:hidden}
+.ex-head{padding:13px 15px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none}
+.ex-body{display:none;padding:0 15px 14px;border-top:0.5px solid var(--bdr)}
+.ex-body.open{display:block}
+.step{display:flex;gap:8px;margin-bottom:5px;font-size:13px;line-height:1.6;color:var(--txt2)}
+.sn{color:var(--txt3);min-width:14px;font-size:11px;margin-top:2px}
+.tip{background:var(--bg3);border-radius:8px;padding:8px 11px;font-size:12px;color:var(--txt2);margin-top:8px}
+.yt{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 12px;border-radius:20px;background:rgba(200,30,30,0.08);border:0.5px solid rgba(200,30,30,0.3);text-decoration:none;color:var(--txt);white-space:nowrap;margin-top:10px}
+.tm-btn{flex:1;border-radius:20px;font-size:12px;padding:8px 8px}
+.tm-work{background:var(--acc-bg);border-color:var(--acc-bd);color:var(--acc)}
+.tm-rest{background:rgba(100,100,120,0.1);border-color:rgba(100,100,120,0.25);color:var(--txt2)}
+.done-big{width:100%;padding:15px;font-size:15px;font-weight:500;border-radius:14px;margin:10px 0;background:var(--acc2);border:none;color:#fff}
+.done-big.done{background:var(--acc-bg);border:0.5px solid var(--acc-bd);color:var(--acc)}
+.food-chip{padding:7px 13px;border-radius:20px;font-size:13px;background:var(--bg2);border:0.5px solid var(--bdr2);color:var(--txt2)}
+.food-item{display:flex;justify-content:space-between;align-items:center;padding:9px 13px;background:var(--bg2);border-radius:10px;margin-bottom:4px;font-size:13px}
+.rm{border:none;background:transparent;color:var(--txt3);font-size:14px;padding:2px 6px;cursor:pointer}
+.card{background:var(--bg2);border-radius:14px;padding:14px 16px;margin-bottom:8px}
+.sec{font-size:12px;font-weight:500;color:var(--txt3);letter-spacing:.5px;text-transform:uppercase;margin:16px 0 8px}
+.pill{display:inline-flex;align-items:center;border-radius:20px;padding:4px 11px;font-size:12px;background:var(--bg3);border:0.5px solid var(--bdr2);color:var(--txt2)}
+
+/* Timer */
+#tw{display:none;position:fixed;bottom:70px;right:0;left:0;max-width:640px;margin:auto;padding:0 14px;z-index:98}
+#tw-inner{background:#1a1a2e;border:0.5px solid var(--acc-bd);border-radius:18px;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 8px 32px rgba(0,0,0,0.6)}
+#tw-num{font-size:48px;font-weight:700;letter-spacing:-2px;line-height:1;color:var(--acc)}
+#tw-lbl{font-size:11px;color:var(--txt3);margin-bottom:3px}
+
+/* Guided */
+#gw{display:none;background:#0d0b1e;border:0.5px solid var(--acc-bd);border-radius:14px;padding:14px 16px;margin-bottom:8px}
+
+/* Progress */
+.stat{background:var(--bg2);border-radius:12px;padding:14px;text-align:center}
+.stat-n{font-size:26px;font-weight:600;color:var(--acc)}
+.stat-l{font-size:11px;color:var(--txt3);margin-top:2px}
+.pb{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;margin:6px 0 14px}
+.pbf{height:100%;background:var(--acc2);border-radius:3px}
+.hmc{height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--txt3)}
+</style>
+</head>
+<body>
+
+<div id="pg-today"></div>
+<div id="pg-prog" style="display:none"></div>
+
+<div id="tw">
+  <div id="tw-inner">
+    <div>
+      <div id="tw-lbl"></div>
+      <div id="tw-num">0</div>
+    </div>
+    <button onclick="stopTimer()" style="padding:9px 18px;border-radius:20px;font-size:13px;background:var(--bg3);border-color:var(--bdr2)">⏹ עצור</button>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <button class="tb on" id="btn-today" onclick="gotoTab('today')"><span class="tbi">🏋️</span>האימון</button>
+  <button class="tb" id="btn-prog" onclick="gotoTab('prog')"><span class="tbi">📊</span>התקדמות</button>
+</div>
+
+<script>
+const SCHED=[
+  {d:1,t:'upper',wk:1},{d:2,t:'lower',wk:1},{d:3,t:'core',wk:1},{d:4,t:'rest',wk:1},
+  {d:5,t:'upper',wk:1},{d:6,t:'lower',wk:1},{d:7,t:'core',wk:1},
+  {d:8,t:'rest',wk:2},{d:9,t:'upper',wk:2},{d:10,t:'lower',wk:2},{d:11,t:'core',wk:2},
+  {d:12,t:'rest',wk:2},{d:13,t:'upper',wk:2},{d:14,t:'lower',wk:2},
+  {d:15,t:'core',wk:3},{d:16,t:'rest',wk:3},{d:17,t:'upper',wk:3},{d:18,t:'lower',wk:3},
+  {d:19,t:'core',wk:3},{d:20,t:'rest',wk:3},{d:21,t:'upper',wk:3},
+  {d:22,t:'lower',wk:4},{d:23,t:'core',wk:4},{d:24,t:'rest',wk:4},{d:25,t:'upper',wk:4},
+  {d:26,t:'lower',wk:4},{d:27,t:'core',wk:4},{d:28,t:'rest',wk:4},
+  {d:29,t:'upper',wk:4},{d:30,t:'lower',wk:4}
+];
+const TNAMES={upper:'גוף עליון',lower:'גוף תחתון',core:'ליבה',rest:'מנוחה אקטיבית'};
+const TEMOJI={upper:'💪',lower:'🦵',core:'⚡',rest:'🧘'};
+const FOODS=['ביצים','קוטג׳','לחם','אורז','עוף','שיבולת שועל','בננה','טונה','גבינה','פסטה'];
+const WARMUP=[{n:'קפיצות במקום',t:30},{n:'מעגולי ידיים',t:20},{n:'מעגולי ירכיים',t:20},{n:'Cat-cow',t:30},{n:'Leg swings',t:20}];
+
+const WKT={
+  upper:[
+    {n:'שכיבות שמיכה',m:'חזה · טריצפס · כתפיים',
+     v:[['3×5','25ש׳','45ש׳'],['3×8','25ש׳','45ש׳'],['3×10','30ש׳','45ש׳']],
+     steps:['שכב, ידיים מתחת לכתפיים ברוחב כתפיים','גוף ישר מהראש עד העקבים','רד עד שהחזה כמעט נוגע ברצפה','דחוף חזרה'],
+     tip:'קשה? עשה על הברכיים — לגיטימי',yt:'https://www.youtube.com/watch?v=oUvdtkhBMZ4'},
+    {n:'Pike push-up',m:'כתפיים · טריצפס',
+     v:[['2×5','25ש׳','45ש׳'],['2×7','25ש׳','45ש׳'],['3×7','30ש׳','45ש׳']],
+     steps:['ידיים ורגליים על הרצפה, ישבן גבוה — צורת V הפוך','כופף מרפקים, הורד ראש בין הידיים','דחוף חזרה'],
+     tip:'ישבן גבוה יותר = יותר עומס על הכתפיים',yt:'https://www.youtube.com/watch?v=paCOGgmLCA0'},
+    {n:'Shoulder taps',m:'כתפיים · ליבה',
+     v:[['2×6/צד','30ש׳','40ש׳'],['3×8/צד','35ש׳','40ש׳'],['3×10/צד','40ש׳','40ש׳']],
+     steps:['תנוחת שכיבות שמיכה','הרם יד ימין וגע בכתף שמאל','חזור, ואז יד שמאל לכתף ימין','קצב איטי — לא לנדנד את האגן'],
+     tip:'פרוש רגליים רחב יותר לשיווי משקל',yt:'https://www.youtube.com/results?search_query=shoulder+taps+exercise+beginner'},
+    {n:'Superman hold ⚠️',m:'גב תחתון · ישבן · גב עליון',
+     v:[['2×8ש׳','35ש׳','30ש׳'],['3×10ש׳','40ש׳','30ש׳'],['3×12ש׳','45ש׳','30ש׳']],
+     steps:['שכב פנים למטה, ידיים מושטות קדימה','הרם ידיים, חזה ורגליים בו-זמנית','הסתכל למטה — אל תסחוב הצוואר','החזק, נשום, תרד לאט'],
+     tip:'כאב גב עליון? שים ידיים לצדדים בצורת T',yt:'https://www.youtube.com/results?search_query=superman+hold+exercise+beginner'},
+    {n:'Diamond push-up',m:'טריצפס · חזה פנימי — שבוע 4 בלבד',
+     v:[null,null,['2×5','25ש׳','45ש׳']],
+     steps:['ידיים קרובות, אגודל ואצבע מורה נוגעים — יהלום','רד לאט, מרפקים קרוב לגוף','דחוף חזרה'],
+     tip:'קשה יותר מרגיל — זה נורמלי',yt:'https://www.youtube.com/results?search_query=diamond+push+up+tutorial+beginner'}
+  ],
+  lower:[
+    {n:'סקוואט ⚠️',m:'ירכיים · ישבן · שוקיים',
+     v:[['3×10','30ש׳','40ש׳'],['3×12','35ש׳','40ש׳'],['4×12','35ש׳','40ש׳']],
+     steps:['עמוד, רגליים ברוחב כתפיים, בהונות קצת החוצה','ידיים קדימה לאיזון','שב לאחור ולמטה כאילו יש כיסא מאחוריך','גב ישר! קום בלחיצת העקבים'],
+     tip:'גב כואב? תתחיל מרבע סקוואט — לא חייב עד למטה',yt:'https://www.youtube.com/watch?v=otzWCWpuW-A'},
+    {n:'גשר ירכיים',m:'ישבן · גב תחתון · ירכיים אחוריות',
+     v:[['3×12','30ש׳','30ש׳'],['3×15','35ש׳','30ש׳'],['3×10/רגל','35ש׳','35ש׳']],
+     steps:['שכב על הגב, ברכיים כפופות, כפות רגליים על הרצפה','דחוף ישבן מעלה — גוף ישר מכתפיים לברכיים','הדק ישבן בחוזקה למעלה','תרד לאט'],
+     tip:'מצוין לגב התחתון — עשה אותו לאט',yt:'https://www.youtube.com/watch?v=LKSMq94YqUQ'},
+    {n:'Reverse lunge',m:'ירכיים · ישבן',
+     v:[['2×6/רגל','35ש׳','40ש׳'],['3×8/רגל','40ש׳','40ש׳'],['3×10/רגל','45ש׳','40ש׳']],
+     steps:['עמוד זקוף, ידיים על הירכיים','צעד גדול אחורה עם רגל אחת','רד עד שהברך האחורית כמעט על הרצפה','חזור לעמידה דרך הרגל הקדמית'],
+     tip:'יותר בטוח לגב מ-lunge רגיל',yt:'https://www.youtube.com/results?search_query=reverse+lunge+tutorial+beginner'},
+    {n:'Calf raises',m:'שוקיים',
+     v:[['2×15','25ש׳','25ש׳'],['2×20','25ש׳','25ש׳'],['3×20','25ש׳','25ש׳']],
+     steps:['עמוד, אפשר להחזיק בקיר','עלה על קצות האצבעות — גבוה ככל האפשר','החזק שנייה','תרד לאט — ה"לאט" בונה שריר'],
+     tip:'על מדרגה = טווח תנועה רחב יותר',yt:'https://www.youtube.com/results?search_query=calf+raises+proper+form'},
+    {n:'Wall sit',m:'ירכיים · ישבן — שבועות 3-4 בלבד',
+     v:[null,['2×25ש׳','25ש׳','40ש׳'],['2×35ש׳','35ש׳','40ש׳']],
+     steps:['הישן בגב ישר על קיר','רד עד שברכיים ב-90 מעלות','ידיים על הירכיים','החזק ותנשום'],
+     tip:'הרגליים שורפות? מושלם — זה בדיוק העניין',yt:'https://www.youtube.com/results?search_query=wall+sit+exercise+tutorial'}
+  ],
+  core:[
+    {n:'Dead bug',m:'ליבה עמוקה · גב תחתון',
+     v:[['3×6/צד','35ש׳','30ש׳'],['3×8/צד','40ש׳','30ש׳'],['3×10/צד','45ש׳','30ש׳']],
+     steps:['שכב על הגב, ידיים ישר למעלה, רגליים 90° מעל הבטן','הורד יד ימין ורגל שמאל לכיוון הרצפה — לאט','הגב נשאר על הרצפה כל הזמן','חזור, ואז הצד השני'],
+     tip:'הגב על הרצפה — זה העיקר',yt:'https://www.youtube.com/watch?v=JrcoGEZn6L4'},
+    {n:'Bird dog',m:'גב תחתון · ישבן · ליבה',
+     v:[['3×6/צד','35ש׳','25ש׳'],['3×8/צד','40ש׳','25ש׳'],['3×10/צד','45ש׳','25ש׳']],
+     steps:['על ארבע — ידיים מתחת לכתפיים, ברכיים מתחת לירכיים','הרם יד ימין קדימה ורגל שמאל אחורה בו-זמנית','גב ישר, אל תסתובב','החזק שנייה, חזור, החלף'],
+     tip:'תדמיין שמחזיק כוס מים על הגב',yt:'https://www.youtube.com/watch?v=-LRjkbEy-qU'},
+    {n:'פלאנק ⚠️',m:'ליבה · כתפיים · גב',
+     v:[['2×20ש׳','20ש׳','30ש׳'],['3×25ש׳','25ש׳','30ש׳'],['3×35ש׳','35ש׳','30ש׳']],
+     steps:['הישן על האמות — לא כפות הידיים','גוף ישר מהראש עד העקבים','אל תרים ישבן, אל תשקע בגב','נשום ותחזיק'],
+     tip:'גב תחתון כואב? רד לברכיים מיד',yt:'https://www.youtube.com/results?search_query=plank+proper+form+beginner'},
+    {n:'Cat-cow',m:'שחרור גב · גמישות',
+     v:[['2×8','30ש׳','15ש׳'],['2×10','30ש׳','15ש׳'],['2×10','30ש׳','15ש׳']],
+     steps:['על ארבע, ידיים מתחת לכתפיים','פרה: הורד בטן למטה, הרם ראש ותחת','חתול: קמר גב למעלה, הורד ראש','עבור ביניהם בקצב נשימה — איטי'],
+     tip:'גם מצוין 2 דקות בבוקר לשחרור הגב',yt:'https://www.youtube.com/results?search_query=cat+cow+stretch+tutorial'},
+    {n:'Side plank',m:'צידי הבטן — שבועות 3-4 בלבד',
+     v:[null,['2×15ש׳/צד','15ש׳','25ש׳'],['3×20ש׳/צד','20ש׳','25ש׳']],
+     steps:['שכב על הצד, הישן על אמה','הרם ירכיים — גוף ישר','יד שנייה על הירך','החזק ואז החלף'],
+     tip:'קשה? ברך על הרצפה — גרסה קלה',yt:'https://www.youtube.com/results?search_query=side+plank+beginner+tutorial'},
+    {n:'Hollow body hold',m:'ליבה עמוקה — שבוע 4 בלבד',
+     v:[null,null,['2×15ש׳','15ש׳','30ש׳']],
+     steps:['שכב, ידיים מאחורי הראש, רגליים ישרות','דחוף גב תחתון לרצפה — חובה','הרם כתפיים ורגליים מעט','גוף כמו בננה, נשום'],
+     tip:'קשה? כופף ברכיים. הגב לרצפה — זה העיקר',yt:'https://www.youtube.com/results?search_query=hollow+body+hold+beginner'}
+  ],
+  rest:[
+    {n:'Hip flexor stretch',t:'30ש׳/צד',s:'ברך אחת על הרצפה, דחוף אגן קדימה — מתיחה בחזית הירך'},
+    {n:"Child's pose",t:'40ש׳',s:'על ארבע, שב אחורה על עקבים, ידיים קדימה'},
+    {n:'Chest opener',t:'30ש׳',s:'קשר ידיים מאחורי הגב, הרם מעט ופתח חזה קדימה'},
+    {n:'Spinal twist',t:'30ש׳/צד',s:'שכב, הטה ברך לצד הנגדי, כתפיים על הרצפה'},
+    {n:'Hamstring stretch',t:'30ש׳/רגל',s:'שכב, הרם רגל ישר, תפוס מאחורי הירך ומשוך'},
+    {n:'Cat-cow',t:'10 חזרות',s:'על ארבע — חלופי: פרה (בטן למטה) וחתול (גב למעלה)'}
+  ]
+};
+
+// ── Timer ─────────────────────────────────────────────
+function parseSec(s){const m=(s||'').match(/\d+/);return m?+m[0]:0;}
+let _tmr={id:null,sec:0,cb:null};
+function beep(){
+  try{
+    const ac=new(window.AudioContext||window.webkitAudioContext)();
+    [0,0.18,0.36].forEach(t=>{
+      const o=ac.createOscillator(),g=ac.createGain();
+      o.connect(g);g.connect(ac.destination);
+      o.frequency.value=880;o.type='sine';
+      g.gain.setValueAtTime(0,ac.currentTime+t);
+      g.gain.linearRampToValueAtTime(0.35,ac.currentTime+t+0.02);
+      g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+t+0.28);
+      o.start(ac.currentTime+t);o.stop(ac.currentTime+t+0.35);
+    });
+  }catch(e){}
+}
+function stopTimer(){
+  if(_tmr.id){clearInterval(_tmr.id);_tmr.id=null;}
+  _tmr.cb=null;
+  document.getElementById('tw').style.display='none';
+}
+function updateTW(){
+  const el=document.getElementById('tw-num');
+  el.textContent=_tmr.sec+'ש׳';
+  el.style.color=_tmr.sec<=5?'#E24B4A':_tmr.sec<=10?'#EF9F27':'var(--acc)';
+}
+function startTimer(sec,lbl,cb){
+  stopTimer();
+  _tmr.sec=sec;_tmr.cb=cb||null;
+  document.getElementById('tw').style.display='block';
+  document.getElementById('tw-lbl').textContent=lbl;
+  updateTW();
+  _tmr.id=setInterval(()=>{
+    _tmr.sec--;
+    if(_tmr.sec<=0){
+      _tmr.sec=0;updateTW();
+      const fn=_tmr.cb;_tmr.cb=null;
+      stopTimer();beep();if(fn)fn();
+    }else updateTW();
+  },1000);
+}
+
+// ── Guided ────────────────────────────────────────────
+let G={on:false,exs:[],vi:0,ei:0,si:0};
+function gSetCount(){const v=G.exs[G.ei].v[G.vi];const m=v[0].match(/^(\d+)/);return m?+m[1]:3;}
+function updateGW(){
+  const el=document.getElementById('gw');if(!el)return;
+  if(!G.on){el.style.display='none';return;}
+  el.style.display='block';
+  const ex=G.exs[G.ei];const total=gSetCount();
+  document.getElementById('gw-info').textContent=`תרגיל ${G.ei+1}/${G.exs.length} · סט ${G.si+1}/${total}`;
+  document.getElementById('gw-name').textContent=ex.n;
+  const btn=document.getElementById('gw-btn');
+  btn.textContent=`▶ התחל סט ${G.si+1}`;btn.onclick=gStartSet;
+}
+function startGuided(){
+  const d=viewDay||getDay();const {t,wk}=SCHED[d-1];
+  if(t==='rest')return;
+  const vi=wk<=2?0:wk===3?1:2;
+  G={on:true,exs:WKT[t].filter(ex=>ex.v[vi]),vi,ei:0,si:0};
+  updateGW();
+  document.getElementById('gw').scrollIntoView({behavior:'smooth',block:'center'});
+}
+function stopGuided(){G.on=false;stopTimer();updateGW();}
+function gStartSet(){
+  const ex=G.exs[G.ei];const v=ex.v[G.vi];
+  const btn=document.getElementById('gw-btn');
+  btn.textContent='⏭ דלג למנוחה';btn.onclick=()=>{stopTimer();gAfterWork();};
+  startTimer(parseSec(v[1]),`⏱ סט ${G.si+1} — ${ex.n}`,gAfterWork);
+}
+function gAfterWork(){
+  const v=G.exs[G.ei].v[G.vi];
+  const btn=document.getElementById('gw-btn');
+  btn.textContent='⏭ דלג לסט הבא';btn.onclick=()=>{stopTimer();gAfterRest();};
+  startTimer(parseSec(v[2]),'💤 מנוחה',gAfterRest);
+}
+function gAfterRest(){
+  const total=gSetCount();
+  if(G.si<total-1)G.si++;
+  else if(G.ei<G.exs.length-1){G.ei++;G.si=0;}
+  else{G.on=false;updateGW();toggleDone(viewDay||getDay());return;}
+  updateGW();
+}
+
+// ── Data ──────────────────────────────────────────────
+let data={startDate:null,logs:{},wt:[]};
+const LS=(()=>{
+  let mem={},ok=true;
+  try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){ok=false;}
+  return{
+    get:k=>{try{return ok?localStorage.getItem(k):(k in mem?mem[k]:null);}catch(e){return k in mem?mem[k]:null;}},
+    set:(k,v)=>{try{ok?localStorage.setItem(k,v):(mem[k]=v);}catch(e){mem[k]=v;}}
+  };
+})();
+function load(){try{const s=LS.get('myfit2');if(s)data=JSON.parse(s);}catch(e){}}
+function save(){try{LS.set('myfit2',JSON.stringify(data));}catch(e){}}
+function getDay(){
+  if(!data.startDate){data.startDate=new Date().toISOString().split('T')[0];save();}
+  const diff=Math.floor((Date.now()-new Date(data.startDate))/86400000)+1;
+  return Math.min(30,Math.max(1,diff));
+}
+function getLog(d){if(!data.logs[d])data.logs[d]={done:false,food:[]};return data.logs[d];}
+function getStreak(){let s=0;const d=getDay();for(let i=d;i>=1;i--){if(getLog(i).done)s++;else break;}return s;}
+
+let viewDay=null;
+function gotoTab(tab){
+  document.getElementById('pg-today').style.display=tab==='today'?'block':'none';
+  document.getElementById('pg-prog').style.display=tab==='prog'?'block':'none';
+  document.getElementById('btn-today').className='tb'+(tab==='today'?' on':'');
+  document.getElementById('btn-prog').className='tb'+(tab==='prog'?' on':'');
+  if(tab==='prog')renderProg();
+}
+
+// ── Render Today ──────────────────────────────────────
+function renderToday(){
+  const d=viewDay||getDay();
+  const {t,wk}=SCHED[d-1];
+  const vi=wk<=2?0:wk===3?1:2;
+  const dur=t==='rest'?'6':(wk<=2?'10':wk===3?'13':'15');
+  const log=getLog(d);
+
+  // Header
+  let h=`<div style="margin-bottom:14px">
+    <div style="font-size:12px;color:var(--txt3);margin-bottom:3px">יום ${d} מתוך 30 · שבוע ${wk}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:24px;font-weight:500">${TNAMES[t]}</div>
+      <div style="font-size:32px">${TEMOJI[t]}</div>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+      ${t!=='rest'?`<button onclick="startGuided()" style="font-size:13px;padding:8px 16px;border-radius:20px;background:var(--acc2);border:none;color:#fff;font-weight:500">▶ התחל אימון</button>`:''}
+      <span class="pill">⏱ ${dur} דק׳</span>
+      ${d>1?`<button onclick="viewDay=${d-1};renderToday()" style="font-size:12px;padding:5px 12px;border-radius:20px">← אתמול</button>`:''}
+      ${d<30?`<button onclick="viewDay=${d+1};renderToday()" style="font-size:12px;padding:5px 12px;border-radius:20px">מחר →</button>`:''}
+      ${d!==getDay()?`<button onclick="viewDay=null;renderToday()" style="font-size:12px;padding:5px 12px;border-radius:20px;background:var(--acc-bg);border-color:var(--acc-bd);color:var(--acc)">היום</button>`:''}
+    </div>
+  </div>`;
+
+  // Guided widget
+  h+=`<div id="gw">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <div id="gw-info" style="font-size:11px;color:var(--acc)"></div>
+      <button onclick="stopGuided()" style="border:none;background:transparent;color:var(--txt3);font-size:12px;padding:2px 6px">✕</button>
+    </div>
+    <div id="gw-name" style="font-size:16px;font-weight:500;margin-bottom:10px"></div>
+    <button id="gw-btn" style="width:100%;padding:12px;border-radius:12px;font-size:14px;font-weight:500;background:var(--acc2);border:none;color:#fff"></button>
+  </div>`;
+
+  // Warmup
+  h+=`<div class="sec">🔥 חימום — 2 דקות</div>
+  <div class="card" style="padding:10px 14px">
+  ${WARMUP.map(w=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--bdr)">
+    <span style="font-size:13px;color:var(--txt2)">· ${w.n}</span>
+    <button onclick="startTimer(${w.t},'🔥 ${w.n}')" style="padding:4px 11px;border-radius:20px;font-size:11px;background:var(--bg3);border-color:var(--bdr2);color:var(--acc);flex-shrink:0">⏱ ${w.t}ש׳</button>
+  </div>`).join('')}
+  </div>`;
+
+  // Exercises
+  h+=`<div class="sec">${t==='rest'?'🧘 מתיחות':'🏋️ תרגילים'}</div>`;
+
+  if(t==='rest'){
+    WKT.rest.forEach(r=>{
+      h+=`<div class="ex-row"><div style="padding:13px 15px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:14px;font-weight:500">${r.n}</div>
+          <div style="font-size:12px;color:var(--txt2);margin-top:2px">${r.s}</div>
+        </div>
+        <button onclick="startTimer(${parseSec(r.t)},'🧘 ${r.n}')" style="padding:6px 12px;border-radius:20px;font-size:11px;background:var(--acc-bg);border-color:var(--acc-bd);color:var(--acc);flex-shrink:0;margin-right:8px">⏱ ${parseSec(r.t)}ש׳</button>
+      </div></div>`;
+    });
+  } else {
+    WKT[t].forEach((ex,i)=>{
+      const v=ex.v[vi];if(!v)return;
+      const id='ex'+d+'_'+i;
+      const ws=parseSec(v[1]);const rs=parseSec(v[2]);
+      h+=`<div class="ex-row" id="${id}">
+        <div class="ex-head" onclick="toggleEx('${id}')">
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:500">${ex.n}</div>
+            <div style="font-size:12px;color:var(--txt2);margin-top:2px">${ex.m}</div>
+          </div>
+          <div style="text-align:center;margin-left:12px">
+            <div style="font-size:18px;font-weight:600;color:var(--acc)">${v[0]}</div>
+            <div style="font-size:10px;color:var(--txt3)">${v[1]}</div>
+          </div>
+          <div style="font-size:16px;color:var(--txt3);margin-right:4px;transition:transform .2s" id="${id}arr">›</div>
+        </div>
+        <div class="ex-body" id="${id}b">
+          <div style="padding-top:12px">
+            ${ex.steps.map((s,j)=>`<div class="step"><span class="sn">${j+1}.</span><span>${s}</span></div>`).join('')}
+            ${ex.tip?`<div class="tip">💡 ${ex.tip}</div>`:''}
+            <a href="${ex.yt}" target="_blank" class="yt">▶ סרטון הסבר</a>
+            <div style="display:flex;gap:7px;margin-top:11px">
+              <button class="tm-btn tm-work" onclick="startTimer(${ws},'⏱ סט')">⏱ סט · ${ws}ש׳</button>
+              <button class="tm-btn tm-rest" onclick="startTimer(${rs},'💤 מנוחה')">💤 מנוחה · ${rs}ש׳</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    });
+  }
+
+  // Done button
+  h+=`<button onclick="toggleDone(${d})" class="done-big${log.done?' done':''}">
+    ${log.done?'✅ סיימתי! לחץ לביטול':'✓ סיימתי את האימון'}
+  </button>`;
+
+  // Food
+  h+=`<div class="sec">🍽 אוכל</div>
+  <div class="card">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+      ${FOODS.map(f=>`<button class="food-chip" onclick="addFood(${d},'${f}')">${f}</button>`).join('')}
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:8px">
+      <input type="text" id="fi" placeholder="משהו אחר..." onkeydown="if(event.key==='Enter'){addFoodCustom(${d})}" style="flex:1">
+      <button onclick="addFoodCustom(${d})" style="white-space:nowrap;padding:10px 14px;flex-shrink:0;background:var(--acc2);border:none;color:#fff">+</button>
+    </div>
+    <div id="fl"></div>
+  </div>`;
+
+  // Metrics
+  h+=`<div class="sec">📊 מדדים</div>
+  <div class="card">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+      <div>
+        <div style="font-size:11px;color:var(--txt3);margin-bottom:4px">⚖️ משקל</div>
+        <input type="number" step="0.1" placeholder="ק״ג" id="wtin" style="width:100%;font-size:13px;padding:8px 10px" onchange="saveWt(this.value)">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--txt3);margin-bottom:4px">👟 צעדים</div>
+        <input type="number" placeholder="0" id="stin" style="width:100%;font-size:13px;padding:8px 10px" onchange="saveSteps(this.value)">
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--txt3);margin-bottom:4px">😴 שינה שע׳</div>
+        <input type="number" step="0.5" placeholder="0" id="spin" style="width:100%;font-size:13px;padding:8px 10px" onchange="saveSleep(this.value)">
+      </div>
+    </div>
+    <button id="hlth-btn" onclick="importFromHealth()" style="width:100%;padding:10px;border-radius:11px;font-size:13px;background:rgba(255,59,48,0.07);border-color:rgba(255,59,48,0.25);color:var(--txt2)">
+      ❤️ ייבוא מ-Shortcuts
+    </button>
+  </div>`;
+
+  document.getElementById('pg-today').innerHTML=h;
+  renderFL(d);
+  const log2=getLog(d);
+  const wi=document.getElementById('wtin');if(wi&&log2.wt)wi.value=log2.wt;
+  const si=document.getElementById('stin');if(si&&log2.steps)si.value=log2.steps;
+  const spi=document.getElementById('spin');if(spi&&log2.sleep)spi.value=log2.sleep;
+  updateGW();
+}
+
+function toggleEx(id){
+  const b=document.getElementById(id+'b'),arr=document.getElementById(id+'arr');
+  if(b.classList.contains('open')){b.classList.remove('open');if(arr)arr.style.transform='';}
+  else{b.classList.add('open');if(arr)arr.style.transform='rotate(90deg)';}
+}
+
+function toggleDone(d){const l=getLog(d);l.done=!l.done;save();renderToday();}
+function addFood(d,f){getLog(d).food.push(f);save();renderFL(d);}
+function addFoodCustom(d){const inp=document.getElementById('fi');if(!inp||!inp.value.trim())return;addFood(d,inp.value.trim());inp.value='';}
+function rmFood(d,i){getLog(d).food.splice(i,1);save();renderFL(d);}
+function saveWt(v){const d=viewDay||getDay();data.wt=data.wt.filter(x=>x.d!==d);if(v){data.wt.push({d,w:parseFloat(v)});getLog(d).wt=parseFloat(v);}save();}
+function saveSteps(v){const d=viewDay||getDay();getLog(d).steps=v?+v:null;save();}
+function saveSleep(v){const d=viewDay||getDay();getLog(d).sleep=v?+v:null;save();}
+async function importFromHealth(){
+  try{
+    const txt=await navigator.clipboard.readText();
+    const p=JSON.parse(txt);const d=viewDay||getDay();
+    if(p.weight){saveWt(p.weight);const wi=document.getElementById('wtin');if(wi)wi.value=p.weight;}
+    if(p.steps){saveSteps(p.steps);const si=document.getElementById('stin');if(si)si.value=p.steps;}
+    if(p.sleep){saveSleep(p.sleep);const spi=document.getElementById('spin');if(spi)spi.value=p.sleep;}
+    const btn=document.getElementById('hlth-btn');
+    if(btn){btn.textContent='✅ יובא בהצלחה!';btn.style.color='var(--acc)';
+      setTimeout(()=>{btn.textContent='❤️ ייבוא מ-Shortcuts';btn.style.color='';},3000);}
+  }catch(e){alert('הרץ קודם את הקיצור ב-iPhone ואז חזור ולחץ.');}
+}
+function renderFL(d){
+  const el=document.getElementById('fl');if(!el)return;
+  const food=getLog(d).food;
+  if(!food.length){el.innerHTML=`<div style="font-size:12px;color:var(--txt3)">עוד לא רשמת אוכל</div>`;return;}
+  el.innerHTML=food.map((f,i)=>`<div class="food-item"><span style="color:var(--txt2)">· ${f}</span><button onclick="rmFood(${d},${i})" class="rm">✕</button></div>`).join('');
+}
+
+// ── Progress ──────────────────────────────────────────
+function renderProg(){
+  const d=getDay();const done=SCHED.filter(({d:x})=>getLog(x).done).length;
+  const streak=getStreak();const pct=Math.round(done/30*100);
+  const accColors={upper:'rgba(175,169,236,0.25)',lower:'rgba(127,119,221,0.25)',core:'rgba(83,74,183,0.25)',rest:'rgba(100,100,100,0.2)'};
+  const bdColors={upper:'rgba(175,169,236,0.5)',lower:'rgba(127,119,221,0.5)',core:'rgba(83,74,183,0.5)',rest:'rgba(100,100,100,0.35)'};
+
+  let h=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+    <div class="stat"><div class="stat-n">${done}</div><div class="stat-l">ימים הושלמו</div></div>
+    <div class="stat"><div class="stat-n">${streak}🔥</div><div class="stat-l">רצופים</div></div>
+    <div class="stat"><div class="stat-n">${pct}%</div><div class="stat-l">מהתוכנית</div></div>
+  </div>
+  <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--txt3);margin-bottom:4px"><span>התקדמות כללית</span><span>${done}/30</span></div>
+  <div class="pb"><div class="pbf" style="width:${pct}%"></div></div>
+  <div class="sec">מפת ימים</div>
+  <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-bottom:16px">`;
+  SCHED.forEach(({d:x,t})=>{
+    const dn=getLog(x).done;const isCur=x===d;
+    h+=`<div class="hmc" style="background:${dn?'rgba(175,169,236,0.3)':accColors[t]};border:1px solid ${dn?'rgba(175,169,236,0.6)':bdColors[t]};${isCur?'outline:2px solid var(--acc);outline-offset:1px':''};color:${dn?'var(--acc)':'var(--txt3)'}">
+      ${dn?'✓':x}
+    </div>`;
+  });
+  h+='</div>';
+  if(data.wt.length){
+    h+=`<div class="sec">⚖️ משקל</div><div class="card" style="padding:10px 14px">`;
+    [...data.wt].sort((a,b)=>a.d-b.d).forEach(({d:x,w})=>{
+      h+=`<div style="display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:0.5px solid var(--bdr)"><span style="color:var(--txt2)">יום ${x}</span><span style="color:var(--acc);font-weight:500">${w} ק״ג</span></div>`;
+    });
+    h+='</div>';
+  }
+  document.getElementById('pg-prog').innerHTML=h;
+}
+
+load();renderToday();
+</script>
+</body>
+</html>
