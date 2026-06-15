@@ -2,8 +2,15 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>הכושר שלי</title>
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="כושר">
+<link rel="apple-touch-icon" href="icon-180.png">
 <style>
 :root{
   --bg:#000;--bg2:#111;--bg3:#1a1a1a;
@@ -225,35 +232,37 @@ function startTimer(sec,lbl,cb){
 }
 
 // ── Guided ────────────────────────────────────────────
-let G={on:false,exs:[],vi:0,ei:0,si:0};
-function gSetCount(){const v=G.exs[G.ei].v[G.vi];const m=v[0].match(/^(\d+)/);return m?+m[1]:3;}
+let G={on:false,exs:[],ei:0,si:0};
+function gCurV(){return G.exs[G.ei].v;}
+function gCurName(){return G.exs[G.ei].ex.n;}
+function gSetCount(){const m=gCurV()[0].match(/^(\d+)/);return m?+m[1]:3;}
 function updateGW(){
   const el=document.getElementById('gw');if(!el)return;
   if(!G.on){el.style.display='none';return;}
   el.style.display='block';
-  const ex=G.exs[G.ei];const total=gSetCount();
+  const total=gSetCount();
   document.getElementById('gw-info').textContent=`תרגיל ${G.ei+1}/${G.exs.length} · סט ${G.si+1}/${total}`;
-  document.getElementById('gw-name').textContent=ex.n;
+  document.getElementById('gw-name').textContent=gCurName();
   const btn=document.getElementById('gw-btn');
   btn.textContent=`▶ התחל סט ${G.si+1}`;btn.onclick=gStartSet;
 }
 function startGuided(){
-  const d=viewDay||getDay();const {t,wk}=SCHED[d-1];
+  const d=viewDay||getDay();const {t}=SCHED[d-1];
   if(t==='rest')return;
-  const vi=wk<=2?0:wk===3?1:2;
-  G={on:true,exs:WKT[t].filter(ex=>ex.v[vi]),vi,ei:0,si:0};
+  const list=dayExercises(d);if(!list.length)return;
+  G={on:true,exs:list,ei:0,si:0};
   updateGW();
   document.getElementById('gw').scrollIntoView({behavior:'smooth',block:'center'});
 }
 function stopGuided(){G.on=false;stopTimer();updateGW();}
 function gStartSet(){
-  const ex=G.exs[G.ei];const v=ex.v[G.vi];
+  const v=gCurV();
   const btn=document.getElementById('gw-btn');
   btn.textContent='⏭ דלג למנוחה';btn.onclick=()=>{stopTimer();gAfterWork();};
-  startTimer(parseSec(v[1]),`⏱ סט ${G.si+1} — ${ex.n}`,gAfterWork);
+  startTimer(parseSec(v[1]),`⏱ סט ${G.si+1} — ${gCurName()}`,gAfterWork);
 }
 function gAfterWork(){
-  const v=G.exs[G.ei].v[G.vi];
+  const v=gCurV();
   const btn=document.getElementById('gw-btn');
   btn.textContent='⏭ דלג לסט הבא';btn.onclick=()=>{stopTimer();gAfterRest();};
   startTimer(parseSec(v[2]),'💤 מנוחה',gAfterRest);
@@ -276,15 +285,48 @@ const LS=(()=>{
     set:(k,v)=>{try{ok?localStorage.setItem(k,v):(mem[k]=v);}catch(e){mem[k]=v;}}
   };
 })();
-function load(){try{const s=LS.get('myfit2');if(s)data=JSON.parse(s);}catch(e){}}
+function load(){try{const s=LS.get('myfit2');if(s)data=JSON.parse(s);}catch(e){}if(!data.round)data.round=1;}
 function save(){try{LS.set('myfit2',JSON.stringify(data));}catch(e){}}
 function getDay(){
   if(!data.startDate){data.startDate=new Date().toISOString().split('T')[0];save();}
   const diff=Math.floor((Date.now()-new Date(data.startDate))/86400000)+1;
   return Math.min(30,Math.max(1,diff));
 }
-function getLog(d){if(!data.logs[d])data.logs[d]={done:false,food:[]};return data.logs[d];}
+// round 1 keeps plain day keys (backward-compat); round 2+ uses prefixed keys
+function logKey(d){return (data.round||1)>1?('r'+data.round+'_'+d):String(d);}
+function getLog(d){const k=logKey(d);let l=data.logs[k];if(!l)l=data.logs[k]={done:false,food:[]};if(!l.skip)l.skip={};if(!l.ov)l.ov={};return l;}
 function getStreak(){let s=0;const d=getDay();for(let i=d;i>=1;i--){if(getLog(i).done)s++;else break;}return s;}
+// difficulty variant — round 2+ always uses the hardest variant
+function curVi(d){const {wk}=SCHED[d-1];const b=wk<=2?0:wk===3?1:2;return (data.round||1)>1?2:b;}
+function exVar(ex,vi){return ex.v[vi]||ex.v.find(x=>x);}
+// resolved exercises for a day, honoring skip + swap overrides
+function dayExercises(d){
+  const {t}=SCHED[d-1];if(t==='rest')return [];
+  const vi=curVi(d);const log=getLog(d);const out=[];
+  WKT[t].forEach((ex,i)=>{
+    if(log.skip[i])return;
+    const useEx=(log.ov[i]!=null)?WKT[t][log.ov[i]]:ex;
+    const v=exVar(useEx,vi);if(!v)return;
+    out.push({ex:useEx,v,slot:i});
+  });
+  return out;
+}
+// ── Plan flexibility actions ──────────────────────────
+function pushPlanDay(){
+  if(!confirm('לדחות את התוכנית ביום אחד? היום הנוכחי יישאר ממתין לך, והכל יזוז יום קדימה.'))return;
+  const sd=new Date(data.startDate);sd.setDate(sd.getDate()+1);
+  data.startDate=sd.toISOString().split('T')[0];save();viewDay=null;renderToday();
+}
+function newRound(){
+  if(!confirm('להתחיל מחזור חדש של 30 יום? ההתקדמות הנוכחית תישמר, והעומס יעלה לרמה המתקדמת.'))return;
+  data.round=(data.round||1)+1;
+  data.startDate=new Date().toISOString().split('T')[0];save();viewDay=null;gotoTab('today');
+}
+function skipEx(d,i){const l=getLog(d);l.skip[i]=true;delete l.ov[i];save();renderToday();}
+function unskipEx(d,i){const l=getLog(d);delete l.skip[i];save();renderToday();}
+function swapEx(d,i,j){const l=getLog(d);l.ov[i]=j;delete l.skip[i];save();renderToday();}
+function resetEx(d,i){const l=getLog(d);delete l.ov[i];save();renderToday();}
+function toggleSwap(id){const e=document.getElementById(id+'swap');if(e)e.style.display=e.style.display==='none'?'block':'none';}
 
 let viewDay=null;
 function gotoTab(tab){
@@ -299,13 +341,15 @@ function gotoTab(tab){
 function renderToday(){
   const d=viewDay||getDay();
   const {t,wk}=SCHED[d-1];
-  const vi=wk<=2?0:wk===3?1:2;
+  const vi=curVi(d);
   const dur=t==='rest'?'6':(wk<=2?'10':wk===3?'13':'15');
   const log=getLog(d);
+  const round=data.round||1;
+  const isToday=d===getDay();
 
   // Header
   let h=`<div style="margin-bottom:14px">
-    <div style="font-size:12px;color:var(--txt3);margin-bottom:3px">יום ${d} מתוך 30 · שבוע ${wk}</div>
+    <div style="font-size:12px;color:var(--txt3);margin-bottom:3px">${round>1?`מחזור ${round} · `:''}יום ${d} מתוך 30 · שבוע ${wk}</div>
     <div style="display:flex;justify-content:space-between;align-items:center">
       <div style="font-size:24px;font-weight:500">${TNAMES[t]}</div>
       <div style="font-size:32px">${TEMOJI[t]}</div>
@@ -315,7 +359,8 @@ function renderToday(){
       <span class="pill">⏱ ${dur} דק׳</span>
       ${d>1?`<button onclick="viewDay=${d-1};renderToday()" style="font-size:12px;padding:5px 12px;border-radius:20px">← אתמול</button>`:''}
       ${d<30?`<button onclick="viewDay=${d+1};renderToday()" style="font-size:12px;padding:5px 12px;border-radius:20px">מחר →</button>`:''}
-      ${d!==getDay()?`<button onclick="viewDay=null;renderToday()" style="font-size:12px;padding:5px 12px;border-radius:20px;background:var(--acc-bg);border-color:var(--acc-bd);color:var(--acc)">היום</button>`:''}
+      ${!isToday?`<button onclick="viewDay=null;renderToday()" style="font-size:12px;padding:5px 12px;border-radius:20px;background:var(--acc-bg);border-color:var(--acc-bd);color:var(--acc)">היום</button>`:''}
+      ${isToday&&!log.done?`<button onclick="pushPlanDay()" style="font-size:12px;padding:5px 12px;border-radius:20px;color:var(--txt2)">פספסתי? דחה יום ⏭</button>`:''}
     </div>
   </div>`;
 
@@ -353,14 +398,26 @@ function renderToday(){
     });
   } else {
     WKT[t].forEach((ex,i)=>{
-      const v=ex.v[vi];if(!v)return;
       const id='ex'+d+'_'+i;
+      // skipped exercise → greyed row with restore
+      if(log.skip[i]){
+        const nm=(log.ov[i]!=null?WKT[t][log.ov[i]]:ex).n;
+        h+=`<div class="ex-row" style="opacity:.45"><div style="padding:12px 15px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:14px;text-decoration:line-through;color:var(--txt2)">${nm}</span>
+          <button onclick="unskipEx(${d},${i})" style="font-size:11px;padding:5px 12px;border-radius:20px;flex-shrink:0">↩︎ החזר</button>
+        </div></div>`;
+        return;
+      }
+      const swapped=log.ov[i]!=null;
+      const useEx=swapped?WKT[t][log.ov[i]]:ex;
+      const v=exVar(useEx,vi);if(!v)return;
       const ws=parseSec(v[1]);const rs=parseSec(v[2]);
+      const swapList=WKT[t].map((alt,j)=>j===i?'':`<button onclick="swapEx(${d},${i},${j})" style="display:block;width:100%;text-align:right;margin-bottom:4px;font-size:12px;padding:8px 12px;border-radius:10px;background:var(--bg3);border-color:var(--bdr2)">${alt.n}</button>`).join('');
       h+=`<div class="ex-row" id="${id}">
         <div class="ex-head" onclick="toggleEx('${id}')">
           <div style="flex:1">
-            <div style="font-size:14px;font-weight:500">${ex.n}</div>
-            <div style="font-size:12px;color:var(--txt2);margin-top:2px">${ex.m}</div>
+            <div style="font-size:14px;font-weight:500">${useEx.n}${swapped?' <span style="font-size:10px;color:var(--acc)">⇄ הוחלף</span>':''}</div>
+            <div style="font-size:12px;color:var(--txt2);margin-top:2px">${useEx.m}</div>
           </div>
           <div style="text-align:center;margin-left:12px">
             <div style="font-size:18px;font-weight:600;color:var(--acc)">${v[0]}</div>
@@ -370,12 +427,21 @@ function renderToday(){
         </div>
         <div class="ex-body" id="${id}b">
           <div style="padding-top:12px">
-            ${ex.steps.map((s,j)=>`<div class="step"><span class="sn">${j+1}.</span><span>${s}</span></div>`).join('')}
-            ${ex.tip?`<div class="tip">💡 ${ex.tip}</div>`:''}
-            <a href="${ex.yt}" target="_blank" class="yt">▶ סרטון הסבר</a>
+            ${useEx.steps.map((s,j)=>`<div class="step"><span class="sn">${j+1}.</span><span>${s}</span></div>`).join('')}
+            ${useEx.tip?`<div class="tip">💡 ${useEx.tip}</div>`:''}
+            <a href="${useEx.yt}" target="_blank" class="yt">▶ סרטון הסבר</a>
             <div style="display:flex;gap:7px;margin-top:11px">
               <button class="tm-btn tm-work" onclick="startTimer(${ws},'⏱ סט')">⏱ סט · ${ws}ש׳</button>
               <button class="tm-btn tm-rest" onclick="startTimer(${rs},'💤 מנוחה')">💤 מנוחה · ${rs}ש׳</button>
+            </div>
+            <div style="display:flex;gap:7px;margin-top:8px">
+              <button onclick="toggleSwap('${id}')" style="flex:1;font-size:11px;padding:6px 10px;border-radius:20px">⇄ החלף תרגיל</button>
+              <button onclick="skipEx(${d},${i})" style="flex:1;font-size:11px;padding:6px 10px;border-radius:20px">✕ דלג היום</button>
+              ${swapped?`<button onclick="resetEx(${d},${i})" style="font-size:11px;padding:6px 10px;border-radius:20px;color:var(--acc)">↩︎ מקורי</button>`:''}
+            </div>
+            <div id="${id}swap" style="display:none;margin-top:8px">
+              <div style="font-size:11px;color:var(--txt3);margin-bottom:6px">בחר תרגיל חלופי מאותה קבוצת שרירים:</div>
+              ${swapList}
             </div>
           </div>
         </div>
@@ -387,6 +453,15 @@ function renderToday(){
   h+=`<button onclick="toggleDone(${d})" class="done-big${log.done?' done':''}">
     ${log.done?'✅ סיימתי! לחץ לביטול':'✓ סיימתי את האימון'}
   </button>`;
+
+  // End of plan → new round
+  if(d===30){
+    h+=`<div class="card" style="text-align:center;background:var(--acc-bg);border:0.5px solid var(--acc-bd)">
+      <div style="font-size:15px;font-weight:500;margin-bottom:4px">🎉 הגעת ליום האחרון של המחזור!</div>
+      <div style="font-size:12px;color:var(--txt2);margin-bottom:10px">מחזור חדש מתחיל מחדש 30 יום, עם העומס המתקדם ביותר.</div>
+      <button onclick="newRound()" style="width:100%;padding:12px;border-radius:12px;font-weight:500;background:var(--acc2);border:none;color:#fff">🔁 התחל מחזור חדש</button>
+    </div>`;
+  }
 
   // Food
   h+=`<div class="sec">🍽 אוכל</div>
@@ -442,7 +517,7 @@ function toggleDone(d){const l=getLog(d);l.done=!l.done;save();renderToday();}
 function addFood(d,f){getLog(d).food.push(f);save();renderFL(d);}
 function addFoodCustom(d){const inp=document.getElementById('fi');if(!inp||!inp.value.trim())return;addFood(d,inp.value.trim());inp.value='';}
 function rmFood(d,i){getLog(d).food.splice(i,1);save();renderFL(d);}
-function saveWt(v){const d=viewDay||getDay();data.wt=data.wt.filter(x=>x.d!==d);if(v){data.wt.push({d,w:parseFloat(v)});getLog(d).wt=parseFloat(v);}save();}
+function saveWt(v){const d=viewDay||getDay();const r=data.round||1;data.wt=data.wt.filter(x=>!(x.d===d&&(x.r||1)===r));if(v){data.wt.push({d,w:parseFloat(v),r});getLog(d).wt=parseFloat(v);}save();}
 function saveSteps(v){const d=viewDay||getDay();getLog(d).steps=v?+v:null;save();}
 function saveSleep(v){const d=viewDay||getDay();getLog(d).sleep=v?+v:null;save();}
 async function importFromHealth(){
@@ -487,17 +562,62 @@ function renderProg(){
     </div>`;
   });
   h+='</div>';
+
+  // Weekly completion bars
+  h+=`<div class="sec">לפי שבוע</div><div class="card" style="padding:13px 15px">`;
+  [1,2,3,4].forEach(w=>{
+    const days=SCHED.filter(s=>s.wk===w);
+    const dn=days.filter(s=>getLog(s.d).done).length;
+    const wp=Math.round(dn/days.length*100);
+    h+=`<div style="margin-bottom:${w<4?'11px':'0'}">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--txt2);margin-bottom:5px"><span>שבוע ${w}</span><span style="color:var(--acc)">${dn}/${days.length}</span></div>
+      <div class="pb" style="margin:0"><div class="pbf" style="width:${wp}%"></div></div>
+    </div>`;
+  });
+  h+='</div>';
+
+  // Weight chart + list
   if(data.wt.length){
-    h+=`<div class="sec">⚖️ משקל</div><div class="card" style="padding:10px 14px">`;
-    [...data.wt].sort((a,b)=>a.d-b.d).forEach(({d:x,w})=>{
-      h+=`<div style="display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:0.5px solid var(--bdr)"><span style="color:var(--txt2)">יום ${x}</span><span style="color:var(--acc);font-weight:500">${w} ק״ג</span></div>`;
+    const chart=weightChartSVG();
+    h+=`<div class="sec">⚖️ משקל</div><div class="card" style="padding:14px 15px">`;
+    if(chart)h+=chart;
+    const pts=[...data.wt].map(p=>({...p,r:p.r||1})).sort((a,b)=>((a.r-1)*30+a.d)-((b.r-1)*30+b.d));
+    const first=pts[0].w,last=pts[pts.length-1].w,diff=+(last-first).toFixed(1);
+    if(pts.length>1)h+=`<div style="text-align:center;font-size:12px;color:var(--txt2);margin:${chart?'10px':'0'} 0 6px">שינוי כולל: <span style="color:${diff<0?'#5BD17F':diff>0?'#EF9F27':'var(--acc)'};font-weight:500">${diff>0?'+':''}${diff} ק״ג</span></div>`;
+    h+=`<div style="margin-top:6px">`;
+    pts.slice().reverse().forEach(({d:x,w,r})=>{
+      h+=`<div style="display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:0.5px solid var(--bdr)"><span style="color:var(--txt2)">${r>1?`מחזור ${r} · `:''}יום ${x}</span><span style="color:var(--acc);font-weight:500">${w} ק״ג</span></div>`;
     });
-    h+='</div>';
+    h+='</div></div>';
   }
   document.getElementById('pg-prog').innerHTML=h;
 }
 
-load();renderToday();
+function weightChartSVG(){
+  const pts=[...data.wt].map(p=>({...p,r:p.r||1})).sort((a,b)=>((a.r-1)*30+a.d)-((b.r-1)*30+b.d));
+  if(pts.length<2)return '';
+  const W=320,H=130,pad=26;
+  const ws=pts.map(p=>p.w);
+  const min=Math.min(...ws),max=Math.max(...ws),rng=(max-min)||1;
+  const xy=pts.map((p,i)=>{
+    const x=pad+(i/(pts.length-1))*(W-2*pad);
+    const y=pad+(1-(p.w-min)/rng)*(H-2*pad);
+    return [+x.toFixed(1),+y.toFixed(1)];
+  });
+  const poly=xy.map(p=>p.join(',')).join(' ');
+  const area=`${pad},${H-pad} ${poly} ${(W-pad)},${H-pad}`;
+  const dots=xy.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="var(--acc)"/>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">
+    <polygon points="${area}" fill="rgba(127,119,221,0.12)"/>
+    <polyline points="${poly}" fill="none" stroke="var(--acc2)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}
+    <text x="${pad}" y="14" fill="var(--txt3)" font-size="10">${max} ק״ג</text>
+    <text x="${pad}" y="${H-6}" fill="var(--txt3)" font-size="10">${min} ק״ג</text>
+  </svg>`;
+}
+
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});}
+try{load();renderToday();}catch(e){document.getElementById('pg-today').innerHTML='<div style="padding:20px;color:#f77;font-family:monospace;font-size:13px;white-space:pre-wrap">שגיאה: '+e.message+'<br><br>'+e.stack+'</div>';}
 </script>
 </body>
 </html>
