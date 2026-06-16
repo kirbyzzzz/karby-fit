@@ -2,8 +2,15 @@
 <html lang="he" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>אימון משקולות 💪</title>
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="manifest-db.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="משקולות">
+<link rel="apple-touch-icon" href="icon-180.png">
 <style>
 :root{
   --bg:#000;--bg2:#111;--bg3:#1a1a1a;
@@ -52,6 +59,49 @@ input::placeholder{color:var(--txt3)}
 #tw-num{font-size:44px;font-weight:700;letter-spacing:-2px;line-height:1;color:var(--acc)}
 #tw-lbl{font-size:11px;color:var(--txt3);margin-bottom:3px}
 #tw-sub{font-size:10px;color:var(--txt3);margin-top:2px}
+
+/* Fullscreen timer overlay */
+#tov{display:none;position:fixed;inset:0;z-index:200;background:rgba(5,5,8,0.98);backdrop-filter:blur(6px);flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:24px}
+#tov.on{display:flex}
+#tov-ctx{font-size:15px;color:var(--acc);font-weight:500;letter-spacing:.3px;text-align:center}
+#tov-ring{position:relative;width:min(74vw,300px);aspect-ratio:1}
+#tov-ring svg{width:100%;height:100%}
+#tov-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:clamp(52px,16vw,88px);font-weight:700;letter-spacing:-3px;color:#fff}
+#tov-name{font-size:15px;color:var(--txt2);text-align:center;max-width:90%}
+#tov-ctrls{display:flex;gap:14px;align-items:center}
+#tov-ctrls button{width:64px;height:64px;border-radius:50%;font-size:16px;font-weight:600;background:var(--bg2);border:0.5px solid var(--bdr2);display:flex;align-items:center;justify-content:center}
+#tov-pause{font-size:24px!important}
+#tov-done{padding:15px 36px;border-radius:24px;font-size:16px;font-weight:600;background:var(--acc2);border:none;color:#fff}
+#tov-skip{padding:11px 26px;border-radius:24px;font-size:14px;font-weight:500;background:var(--bg2);border:0.5px solid var(--bdr2);color:var(--txt2)}
+
+/* Progress photo prompt */
+#pp{display:none;position:fixed;inset:0;z-index:210;background:rgba(0,0,0,0.85);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:24px}
+#pp.on{display:flex}
+#pp-card{background:var(--bg2);border:0.5px solid var(--bdr2);border-radius:22px;padding:26px 22px;text-align:center;max-width:340px;width:100%}
+#pp-emoji{font-size:46px;margin-bottom:6px}
+#pp-title{font-size:18px;font-weight:600;margin-bottom:6px}
+#pp-sub{font-size:13px;color:var(--txt2);margin-bottom:18px;line-height:1.5}
+#pp-shot{width:100%;padding:14px;border-radius:14px;font-size:15px;font-weight:500;background:var(--acc2);border:none;color:#fff;margin-bottom:8px}
+#pp-later{width:100%;padding:11px;border-radius:14px;font-size:13px;color:var(--txt3);background:transparent;border:none}
+#pp-thumb img{width:100%;border-radius:14px;margin-top:12px}
+
+/* Water + notes + badges + photos */
+.wbtn{width:42px;height:42px;border-radius:50%;font-size:20px;font-weight:600;display:flex;align-items:center;justify-content:center;background:var(--bg3);border:0.5px solid var(--bdr2);color:var(--acc)}
+.note-chip{padding:7px 13px;border-radius:20px;font-size:13px;background:var(--bg2);border:0.5px solid var(--bdr2);color:var(--txt2)}
+.note-chip.on{background:var(--acc-bg);border-color:var(--acc-bd);color:var(--acc)}
+.badge{aspect-ratio:1;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px;background:var(--bg2);border:0.5px solid var(--bdr);text-align:center}
+.badge.lk{opacity:.35;filter:grayscale(1)}
+.badge-i{font-size:26px;line-height:1}
+.badge-t{font-size:9px;color:var(--txt3);line-height:1.2}
+.badge.un .badge-t{color:var(--acc)}
+.ph-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.ph-cell{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--bg3)}
+.ph-cell img{width:100%;height:100%;object-fit:cover}
+.ph-day{position:absolute;bottom:0;right:0;left:0;background:linear-gradient(transparent,rgba(0,0,0,0.7));color:#fff;font-size:9px;padding:8px 5px 3px;text-align:center}
+.ph-del{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:215;overflow:hidden}
+.cft{position:absolute;width:9px;height:14px;top:-20px;animation:cfall linear forwards}
+@keyframes cfall{to{transform:translateY(104vh) rotate(720deg);opacity:.9}}
 </style>
 </head>
 <body>
@@ -59,19 +109,39 @@ input::placeholder{color:var(--txt3)}
 <div id="pg-today"></div>
 <div id="pg-prog" style="display:none"></div>
 
-<div id="tw">
-  <div id="tw-inner">
-    <div>
-      <div id="tw-lbl"></div>
-      <div id="tw-num">0:00</div>
-      <div id="tw-sub"></div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end">
-      <button id="tw-done" style="display:none;padding:9px 16px;border-radius:20px;font-size:13px;background:var(--acc2);border:none;color:#fff">✓ סיימתי</button>
-      <button onclick="cancelTimer()" style="padding:7px 14px;border-radius:20px;font-size:12px;background:var(--bg3);border-color:var(--bdr2)">⏹ עצור</button>
-    </div>
+<!-- Fullscreen timer -->
+<div id="tov">
+  <div id="tov-ctx"></div>
+  <div id="tov-ring">
+    <svg viewBox="0 0 220 220">
+      <circle cx="110" cy="110" r="100" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="11"/>
+      <circle id="tov-arc" cx="110" cy="110" r="100" fill="none" stroke="var(--acc2)" stroke-width="11" stroke-linecap="round" transform="rotate(-90 110 110)" stroke-dasharray="628" stroke-dashoffset="0"/>
+    </svg>
+    <div id="tov-num">0</div>
+  </div>
+  <div id="tov-name"></div>
+  <div id="tov-ctrls">
+    <button onclick="adjTimer(-15)">−15</button>
+    <button id="tov-pause" onclick="pauseTimer()">⏸</button>
+    <button onclick="adjTimer(15)">+15</button>
+  </div>
+  <button id="tov-done">✓ סיימתי את הסט</button>
+  <button id="tov-skip" onclick="skipTimer()">דלג ←</button>
+</div>
+
+<!-- Progress photo prompt -->
+<div id="pp">
+  <div id="pp-card">
+    <div id="pp-emoji">🎉</div>
+    <div id="pp-title">כל הכבוד! סיימת את האימון</div>
+    <div id="pp-sub">צלם תמונת התקדמות — ככה תראה את השינוי בגוף לאורך הזמן.</div>
+    <button id="pp-shot" onclick="pickPhoto()">📸 צלם תמונה</button>
+    <button id="pp-later" onclick="closePP()">אחר כך</button>
+    <div id="pp-thumb"></div>
   </div>
 </div>
+<input type="file" accept="image/*" capture="user" id="photo-input" style="display:none" onchange="handlePhotoPick(this)">
+<div id="confetti"></div>
 
 <div class="tab-bar">
   <button class="tb on" id="btn-today" onclick="gotoTab('today')"><span class="tbi">🏋️</span>האימון</button>
@@ -94,6 +164,7 @@ const TNAMES={upper:'גוף עליון',lower:'גוף תחתון',core:'ליבה
 const TEMOJI={upper:'💪',lower:'🦵',core:'⚡',rest:'🧘'};
 const WARMUP=[{n:'קפיצות במקום',t:30},{n:'מעגולי ידיים',t:20},{n:'מעגולי ירכיים',t:20},{n:'Cat-cow',t:30},{n:'Leg swings',t:20}];
 const FOODS=['ביצים','קוטג׳','לחם','אורז','עוף','שיבולת שועל','בננה','טונה','גבינה','פסטה'];
+const NOTES=['💪 מלא אנרגיה','🔥 אימון מעולה','✅ הגב הרגיש טוב','😮‍💨 היה קשה','📈 התחזקתי','😴 הייתי עייף','⚠️ כאב גב','🏋️ העליתי משקל'];
 
 // v: ['סטים×חזרות', 'משקל', מנוחה_שניות]  ×3 (שב׳1-2 / שב׳3 / שב׳4)
 // timed:true → סט על זמן (פלאנק וכד')
@@ -261,90 +332,75 @@ function beep(){
   }catch(e){}
 }
 
-let T={mode:null,id:null,sec:0,key:null,idx:null};
+let T={mode:null,id:null,sec:0,total:0,cb:null,key:null,idx:null,paused:false};
 // _exMap: populated during render — holds exercise metadata per key
 const _exMap={};
-
-function cancelTimer(){
-  clearInterval(T.id);T.id=null;T.mode=null;
-  document.getElementById('tw').style.display='none';
-  document.getElementById('tw-done').style.display='none';
+const _ARC=628; // 2·π·100
+function _tov(id){return document.getElementById(id);}
+function cancelTimer(){if(T.id){clearInterval(T.id);T.id=null;}T.mode=null;T.cb=null;T.paused=false;_tov('tov').classList.remove('on');}
+function _renderCD(){
+  const el=_tov('tov-num');el.textContent=T.sec;
+  el.style.color=T.sec<=5?'#E24B4A':T.sec<=10?'#EF9F27':'#fff';
+  const arc=_tov('tov-arc');const frac=T.total>0?T.sec/T.total:0;
+  arc.style.strokeDashoffset=(_ARC*(1-frac)).toFixed(1);
+  arc.style.stroke=T.sec<=5?'#E24B4A':T.sec<=10?'#EF9F27':'var(--acc2)';
 }
-
-function _showTW(lbl,sub,showDone){
-  document.getElementById('tw').style.display='block';
-  document.getElementById('tw-lbl').textContent=lbl;
-  document.getElementById('tw-sub').textContent=sub;
-  const d=document.getElementById('tw-done');
-  d.style.display=showDone?'block':'none';
-}
-
-function _updateNum(txt,color){
-  const el=document.getElementById('tw-num');
-  el.textContent=txt;el.style.color=color||'var(--acc)';
-}
-
-// Countdown (rest between sets, or timed exercise)
-function startCD(sec,lbl,onDone){
-  clearInterval(T.id);
-  T={mode:'cd',id:null,sec,key:null,idx:null};
-  _showTW(lbl||'💤 מנוחה','⏭ לחץ "עצור" כדי לדלג',false);
-  const tick=()=>{
-    const c=T.sec<=5?'#E24B4A':T.sec<=10?'#EF9F27':'var(--acc)';
-    _updateNum(T.sec+'ש׳',c);
-  };
-  tick();
+// Countdown (rest between sets, or timed hold)
+function startCD(sec,lbl,onDone,name){
+  if(T.id)clearInterval(T.id);
+  T={mode:'cd',id:null,sec,total:sec,cb:onDone||null,paused:false};
+  _tov('tov-ctx').textContent=lbl||'מנוחה 💤';
+  _tov('tov-name').textContent=name||'';
+  _tov('tov-pause').textContent='⏸';
+  _tov('tov-ctrls').style.display='flex';
+  _tov('tov-skip').style.display='block';
+  _tov('tov-done').style.display='none';
+  _tov('tov').classList.add('on');
+  _renderCD();
   T.id=setInterval(()=>{
+    if(T.paused)return;
     T.sec--;
-    if(T.sec<=0){clearInterval(T.id);T.id=null;beep();document.getElementById('tw').style.display='none';if(onDone)onDone();}
-    else tick();
+    if(T.sec<=0){T.sec=0;_renderCD();const fn=T.cb;T.cb=null;clearInterval(T.id);T.id=null;_tov('tov').classList.remove('on');beep();if(fn)fn();}
+    else _renderCD();
   },1000);
 }
-
-// Stopwatch (for regular dumbbell sets)
+function pauseTimer(){if(T.mode!=='cd')return;T.paused=!T.paused;_tov('tov-pause').textContent=T.paused?'▶':'⏸';}
+function adjTimer(n){if(T.mode!=='cd')return;T.sec=Math.max(1,T.sec+n);if(T.sec>T.total)T.total=T.sec;_renderCD();}
+function skipTimer(){const fn=T.cb;T.cb=null;if(T.id){clearInterval(T.id);T.id=null;}T.paused=false;_tov('tov').classList.remove('on');if(fn)fn();}
+// Stopwatch (count up) for a regular dumbbell set
 function startSW(key,idx){
   const m=_exMap[key];if(!m)return;
-  clearInterval(T.id);
+  if(T.id)clearInterval(T.id);
   T={mode:'sw',id:null,sec:0,key,idx};
-  _showTW(`⏱ סט ${idx+1} · ${m.n}`,'לחץ "✓ סיימתי" כשתסיים',true);
-  document.getElementById('tw-done').onclick=()=>finishSW();
-  _updateNum('0:00','var(--acc)');
-  T.id=setInterval(()=>{T.sec++;_updateNum(fmtSW(T.sec),'var(--acc)');},1000);
+  _tov('tov-ctx').textContent=`סט ${idx+1} · ${m.n}`;
+  _tov('tov-name').textContent='ספירת זמן הסט · לחץ "סיימתי" בסיום';
+  _tov('tov-ctrls').style.display='none';
+  _tov('tov-skip').style.display='none';
+  _tov('tov-done').style.display='block';
+  _tov('tov-done').onclick=finishSW;
+  const arc=_tov('tov-arc');arc.style.strokeDashoffset=0;arc.style.stroke='var(--acc2)';
+  _tov('tov-num').textContent=fmtSW(0);_tov('tov-num').style.color='#fff';
+  _tov('tov').classList.add('on');
+  T.id=setInterval(()=>{T.sec++;_tov('tov-num').textContent=fmtSW(T.sec);},1000);
 }
-
 function finishSW(){
-  const elapsed=T.sec;
-  const {key,idx}=T;
-  const m=_exMap[key];
-  clearInterval(T.id);T.id=null;
-  saveSetTime(key,idx,elapsed);
-  markSetDone(key,idx,fmtSW(elapsed));
-  if(m)startCD(m.rest,'💤 מנוחה');
-  else{document.getElementById('tw').style.display='none';}
+  const elapsed=T.sec,key=T.key,idx=T.idx,m=_exMap[key];
+  if(T.id){clearInterval(T.id);T.id=null;}
+  const d=viewDay||getDay();
+  saveSetTime(key,idx,elapsed);markSetDone(key,idx,fmtSW(elapsed));
+  _tov('tov').classList.remove('on');beep();
+  if(allSetsDone(d)){finishWorkout(d);return;}
+  if(m&&m.rest)startCD(m.rest,'מנוחה 💤',null,m.n);
 }
-
-// Timed set (e.g. plank)
+// Timed hold set (e.g. plank)
 function startTimedSet(key,idx){
   const m=_exMap[key];if(!m)return;
-  clearInterval(T.id);
-  const sec=m.setDur;
-  T={mode:'timed',id:null,sec,key,idx};
-  _showTW(`⏱ סט ${idx+1} · ${m.n}`,'החזק!',false);
-  const tick=()=>{
-    const c=T.sec<=5?'#E24B4A':T.sec<=10?'#EF9F27':'var(--acc)';
-    _updateNum(T.sec+'ש׳',c);
-  };
-  tick();
-  T.id=setInterval(()=>{
-    T.sec--;
-    if(T.sec<=0){
-      clearInterval(T.id);T.id=null;beep();
-      saveSetTime(key,idx,sec);
-      markSetDone(key,idx,fmtSW(sec));
-      if(m)startCD(m.rest,'💤 מנוחה');
-      else document.getElementById('tw').style.display='none';
-    }else tick();
-  },1000);
+  const d=viewDay||getDay();
+  startCD(m.setDur,`סט ${idx+1} · החזקה 🧘`,()=>{
+    saveSetTime(key,idx,m.setDur);markSetDone(key,idx,fmtSW(m.setDur));
+    if(allSetsDone(d)){finishWorkout(d);return;}
+    if(m&&m.rest)startCD(m.rest,'מנוחה 💤',null,m.n);
+  },m.n);
 }
 
 function markSetDone(key,idx,label){
@@ -504,6 +560,26 @@ function renderToday(){
   // Food + camera
   h+=renderFoodCard(d);
 
+  // Water
+  const water=log.water||0;
+  h+=`<div class="sec">💧 מים</div>
+  <div class="card" style="display:flex;align-items:center;justify-content:space-between">
+    <button class="wbtn" onclick="addWater(${d},-1)">−</button>
+    <div style="text-align:center">
+      <div style="font-size:26px;font-weight:600;color:var(--acc)" id="water-n">${water}</div>
+      <div style="font-size:11px;color:var(--txt3)">כוסות (יעד 8)</div>
+    </div>
+    <button class="wbtn" onclick="addWater(${d},1)">+</button>
+  </div>`;
+
+  // Daily notes
+  h+=`<div class="sec">📝 איך היה היום?</div>
+  <div class="card">
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      ${NOTES.map(n=>`<button class="note-chip${(log.notes||[]).includes(n)?' on':''}" onclick="toggleNote(${d},'${n}')">${n}</button>`).join('')}
+    </div>
+  </div>`;
+
   // Metrics
   h+=`<div class="sec">📊 מדדים</div>
   <div class="card">
@@ -570,7 +646,109 @@ function toggleEx(id){
   if(b.classList.contains('open')){b.classList.remove('open');if(arr)arr.style.transform='';}
   else{b.classList.add('open');if(arr)arr.style.transform='rotate(90deg)';}
 }
-function toggleDone(d){const l=getLog(d);l.done=!l.done;save();renderToday();}
+function toggleDone(d){const l=getLog(d);const was=l.done;l.done=!l.done;save();renderToday();if(!was&&l.done){celebrate();setTimeout(()=>promptProgressPhoto(),700);}}
+
+// ── Workout completion ────────────────────────────────
+function dayTotalSets(d){const {t,wk}=SCHED[d-1];if(t==='rest')return 0;const vi=wk<=2?0:wk===3?1:2;let n=0;WKT[t].forEach(ex=>{const v=ex.v[vi];if(v)n+=parseInt(v[0]);});return n;}
+function daySavedSets(d){const log=getLog(d);let n=0;Object.values(log.sets||{}).forEach(arr=>{(arr||[]).forEach(x=>{if(x!=null)n++;});});return n;}
+function allSetsDone(d){const tot=dayTotalSets(d);return tot>0&&daySavedSets(d)>=tot;}
+function finishWorkout(d){const l=getLog(d);if(!l.done){l.done=true;save();}renderToday();celebrate();setTimeout(()=>promptProgressPhoto(),700);}
+
+// ── Water + Notes + Height ────────────────────────────
+function addWater(d,n){const l=getLog(d);l.water=Math.max(0,(l.water||0)+n);save();const el=document.getElementById('water-n');if(el)el.textContent=l.water;}
+function toggleNote(d,note){const l=getLog(d);l.notes=l.notes||[];const i=l.notes.indexOf(note);if(i>=0)l.notes.splice(i,1);else l.notes.push(note);save();renderToday();}
+function saveHeight(v){data.height=v?parseFloat(v):null;save();gotoTab('prog');}
+
+// ── Confetti ──────────────────────────────────────────
+function celebrate(){
+  const box=document.getElementById('confetti');if(!box)return;
+  const cols=['#AFA9EC','#7F77DD','#5BD17F','#EF9F27','#fff'];
+  for(let i=0;i<70;i++){
+    const c=document.createElement('div');c.className='cft';
+    c.style.left=Math.random()*100+'vw';c.style.background=cols[i%cols.length];
+    c.style.animationDuration=(1.6+Math.random()*1.4)+'s';c.style.animationDelay=(Math.random()*0.4)+'s';
+    box.appendChild(c);
+  }
+  beep();setTimeout(()=>{box.innerHTML='';},3600);
+}
+
+// ── Progress photos (IndexedDB) ───────────────────────
+function _openDB(){return new Promise((res,rej)=>{try{const r=indexedDB.open('karbyfit-db',1);r.onupgradeneeded=()=>r.result.createObjectStore('photos',{keyPath:'id',autoIncrement:true});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);}catch(e){rej(e);}});}
+async function addPhoto(img){try{const db=await _openDB();await new Promise((res,rej)=>{const tx=db.transaction('photos','readwrite');tx.objectStore('photos').add({ts:Date.now(),day:viewDay||getDay(),img});tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});return true;}catch(e){return false;}}
+async function getPhotos(){try{const db=await _openDB();return await new Promise(res=>{const tx=db.transaction('photos','readonly');const q=tx.objectStore('photos').getAll();q.onsuccess=()=>res(q.result||[]);q.onerror=()=>res([]);});}catch(e){return [];}}
+async function delPhoto(id){if(!confirm('למחוק את התמונה?'))return;try{const db=await _openDB();await new Promise(res=>{const tx=db.transaction('photos','readwrite');tx.objectStore('photos').delete(id);tx.oncomplete=res;tx.onerror=res;});}catch(e){}renderPhotos();}
+function compressImg(file,max){return new Promise((res,rej)=>{const img=new Image();const url=URL.createObjectURL(file);img.onload=()=>{const cv=document.createElement('canvas');let{width:w,height:hh}=img;if(w>max||hh>max){const s=max/Math.max(w,hh);w=Math.round(w*s);hh=Math.round(hh*s);}cv.width=w;cv.height=hh;cv.getContext('2d').drawImage(img,0,0,w,hh);URL.revokeObjectURL(url);res(cv.toDataURL('image/jpeg',0.8));};img.onerror=rej;img.src=url;});}
+function pickPhoto(){document.getElementById('photo-input').click();}
+async function handlePhotoPick(input){
+  if(!input.files||!input.files[0])return;
+  const img=await compressImg(input.files[0],720);
+  await addPhoto(img);input.value='';
+  const thumb=document.getElementById('pp-thumb');
+  if(thumb&&document.getElementById('pp').classList.contains('on')){
+    thumb.innerHTML=`<img src="${img}">`;
+    document.getElementById('pp-title').textContent='נשמר! 💜';
+    document.getElementById('pp-sub').textContent='התמונה נוספה לגלריית ההתקדמות שלך.';
+    document.getElementById('pp-shot').textContent='📸 עוד אחת';
+    document.getElementById('pp-later').textContent='סגור';
+  }
+  renderPhotos();
+}
+function promptProgressPhoto(){
+  document.getElementById('pp-emoji').textContent='🎉';
+  document.getElementById('pp-title').textContent='כל הכבוד! סיימת את האימון';
+  document.getElementById('pp-sub').textContent='צלם תמונת התקדמות — ככה תראה את השינוי בגוף לאורך הזמן.';
+  document.getElementById('pp-shot').textContent='📸 צלם תמונה';
+  document.getElementById('pp-later').textContent='אחר כך';
+  document.getElementById('pp-thumb').innerHTML='';
+  document.getElementById('pp').classList.add('on');
+}
+function closePP(){document.getElementById('pp').classList.remove('on');}
+async function renderPhotos(){
+  const el=document.getElementById('ph-wrap');if(!el)return;
+  const photos=(await getPhotos()).sort((a,b)=>a.ts-b.ts);
+  if(!photos.length){el.innerHTML=`<div style="font-size:12px;color:var(--txt3)">עוד אין תמונות. סיים אימון כדי לצלם את הראשונה 📸</div>`;return;}
+  el.innerHTML=`<div class="ph-grid">`+photos.map(p=>{
+    const dt=new Date(p.ts);const lbl=`${dt.getDate()}/${dt.getMonth()+1}`;
+    return `<div class="ph-cell"><img src="${p.img}"><button class="ph-del" onclick="delPhoto(${p.id})">✕</button><div class="ph-day">${lbl}</div></div>`;
+  }).join('')+`</div>`;
+}
+
+// ── Achievements ──────────────────────────────────────
+function getAchievements(){
+  const done=Object.values(data.logs).filter(l=>l.done).length;
+  const streak=getStreak();
+  const fullWeek=[1,2,3,4].some(w=>SCHED.filter(s=>s.wk===w).every(s=>getLog(s.d).done));
+  const hasNote=Object.values(data.logs).some(l=>(l.notes||[]).length);
+  return [
+    {i:'🎯',t:'אימון ראשון',un:done>=1},
+    {i:'💪',t:'5 אימונים',un:done>=5},
+    {i:'🔥',t:'7 ימים רצוף',un:streak>=7},
+    {i:'📅',t:'שבוע מלא',un:fullWeek},
+    {i:'🏅',t:'10 אימונים',un:done>=10},
+    {i:'📝',t:'תיעדת יום',un:hasNote},
+    {i:'⚡',t:'20 אימונים',un:done>=20},
+    {i:'🏆',t:'30 אימונים',un:done>=30},
+  ];
+}
+
+// ── Weight chart ──────────────────────────────────────
+function weightChartSVG(){
+  const pts=[...data.wt].sort((a,b)=>a.d-b.d);
+  if(pts.length<2)return '';
+  const W=320,H=130,pad=26;
+  const ws=pts.map(p=>p.w);const min=Math.min(...ws),max=Math.max(...ws),rng=(max-min)||1;
+  const xy=pts.map((p,i)=>{const x=pad+(i/(pts.length-1))*(W-2*pad);const y=pad+(1-(p.w-min)/rng)*(H-2*pad);return [+x.toFixed(1),+y.toFixed(1)];});
+  const poly=xy.map(p=>p.join(',')).join(' ');
+  const area=`${pad},${H-pad} ${poly} ${(W-pad)},${H-pad}`;
+  const dots=xy.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="var(--acc)"/>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">
+    <polygon points="${area}" fill="rgba(127,119,221,0.12)"/>
+    <polyline points="${poly}" fill="none" stroke="var(--acc2)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    ${dots}
+    <text x="${pad}" y="14" fill="var(--txt3)" font-size="10">${max} ק״ג</text>
+    <text x="${pad}" y="${H-6}" fill="var(--txt3)" font-size="10">${min} ק״ג</text>
+  </svg>`;
+}
 
 // ── Food ──────────────────────────────────────────────
 function renderFoodCard(d){
@@ -731,8 +909,23 @@ function renderProg(){
     <div class="stat"><div class="stat-n">${pct}%</div><div class="stat-l">מהתוכנית</div></div>
   </div>
   <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--txt3);margin-bottom:4px"><span>התקדמות כללית</span><span>${done}/30</span></div>
-  <div class="pb"><div class="pbf" style="width:${pct}%"></div></div>
-  <div class="sec">מפת ימים</div>
+  <div class="pb"><div class="pbf" style="width:${pct}%"></div></div>`;
+
+  // This-week summary
+  const curWk=SCHED[d-1].wk;
+  const wkDays=SCHED.filter(s=>s.wk===curWk);
+  const wkDone=wkDays.filter(s=>getLog(s.d).done).length;
+  let msg='קדימה, אתה בדרך! 💪';
+  if(wkDone>=5)msg='שבוע מטורף — אלוף! 🏆';
+  else if(wkDone>=3)msg='ממשיכים חזק, כל הכבוד! 🔥';
+  else if(wkDone===0)msg='יום חדש, הזדמנות חדשה. בוא נתחיל 🙌';
+  h+=`<div class="card" style="background:var(--acc-bg);border:0.5px solid var(--acc-bd);text-align:center;padding:14px">
+    <div style="font-size:12px;color:var(--txt3);margin-bottom:3px">סיכום שבוע ${curWk}</div>
+    <div style="font-size:15px;font-weight:500;margin-bottom:6px">${wkDone}/${wkDays.length} אימונים השבוע</div>
+    <div style="font-size:13px;color:var(--acc)">${msg}</div>
+  </div>`;
+
+  h+=`<div class="sec">מפת ימים</div>
   <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-bottom:16px">`;
 
   SCHED.forEach(({d:x,t})=>{
@@ -741,6 +934,12 @@ function renderProg(){
       ${dn?'✓':x}
     </div>`;
   });
+  h+='</div>';
+
+  // Achievements
+  h+=`<div class="sec">🏆 הישגים</div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">`;
+  getAchievements().forEach(a=>{h+=`<div class="badge ${a.un?'un':'lk'}"><div class="badge-i">${a.i}</div><div class="badge-t">${a.t}</div></div>`;});
   h+='</div>';
 
   // Set time records
@@ -777,16 +976,53 @@ function renderProg(){
   }
 
   if(data.wt.length){
-    h+=`<div class="sec">⚖️ משקל</div><div class="card" style="padding:10px 14px">`;
-    [...data.wt].sort((a,b)=>a.d-b.d).forEach(({d:x,w})=>{
+    const chart=weightChartSVG();
+    h+=`<div class="sec">⚖️ משקל</div><div class="card" style="padding:14px 15px">`;
+    if(chart)h+=chart;
+    const pts=[...data.wt].sort((a,b)=>a.d-b.d);
+    const diff=+(pts[pts.length-1].w-pts[0].w).toFixed(1);
+    if(pts.length>1)h+=`<div style="text-align:center;font-size:12px;color:var(--txt2);margin:${chart?'10px':'0'} 0 6px">שינוי כולל: <span style="color:${diff<0?'#5BD17F':diff>0?'#EF9F27':'var(--acc)'};font-weight:500">${diff>0?'+':''}${diff} ק״ג</span></div>`;
+    h+=`<div style="margin-top:6px">`;
+    pts.slice().reverse().forEach(({d:x,w})=>{
       h+=`<div style="display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:0.5px solid var(--bdr)"><span style="color:var(--txt2)">יום ${x}</span><span style="color:var(--acc);font-weight:500">${w} ק״ג</span></div>`;
     });
-    h+='</div>';
+    h+='</div></div>';
   }
 
+  // BMI
+  const lastWt=data.wt.length?[...data.wt].sort((a,b)=>a.d-b.d).pop().w:null;
+  h+=`<div class="sec">⚖️ BMI</div><div class="card" style="padding:14px 15px">`;
+  if(!data.height){
+    h+=`<div style="font-size:12px;color:var(--txt2);margin-bottom:8px">הזן את הגובה שלך (ס״מ) כדי לחשב BMI:</div>
+      <div style="display:flex;gap:6px"><input type="number" id="hin" placeholder="לדוגמה 178" style="flex:1"><button onclick="saveHeight(document.getElementById('hin').value)" style="background:var(--acc2);border:none;color:#fff;padding:10px 16px">שמור</button></div>`;
+  } else if(!lastWt){
+    h+=`<div style="font-size:12px;color:var(--txt2)">גובה: ${data.height} ס״מ. הזן משקל בטאב האימון כדי לחשב BMI. <button onclick="data.height=null;save();renderProg()" style="font-size:11px;padding:3px 8px;border-radius:14px;margin-right:6px">שנה גובה</button></div>`;
+  } else {
+    const bmi=lastWt/Math.pow(data.height/100,2);
+    const cat=bmi<18.5?['תת-משקל','#EF9F27']:bmi<25?['תקין','#5BD17F']:bmi<30?['עודף משקל','#EF9F27']:['השמנה','#E24B4A'];
+    h+=`<div style="display:flex;align-items:center;justify-content:space-between">
+      <div><div style="font-size:30px;font-weight:700;color:${cat[1]}">${bmi.toFixed(1)}</div><div style="font-size:12px;color:${cat[1]}">${cat[0]}</div></div>
+      <div style="text-align:left;font-size:11px;color:var(--txt3)">משקל ${lastWt} ק״ג · גובה ${data.height} ס״מ<br><button onclick="data.height=null;save();renderProg()" style="font-size:11px;padding:3px 8px;border-radius:14px;margin-top:6px">שנה גובה</button></div>
+    </div>`;
+  }
+  h+='</div>';
+
+  // Progress photos
+  h+=`<div class="sec">📸 תמונות התקדמות</div>
+  <div class="card">
+    <div id="ph-wrap" style="margin-bottom:10px"></div>
+    <button onclick="pickPhoto()" style="width:100%;padding:10px;border-radius:11px;font-size:13px;background:var(--acc-bg);border-color:var(--acc-bd);color:var(--acc)">📸 הוסף תמונה</button>
+  </div>`;
+
   document.getElementById('pg-prog').innerHTML=h;
+  renderPhotos();
 }
 
+if('serviceWorker' in navigator){
+  let _swReloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(_swReloaded)return;_swReloaded=true;location.reload();});
+  window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').then(r=>r.update()).catch(()=>{});});
+}
 try{load();renderToday();}catch(e){document.getElementById('pg-today').innerHTML='<div style="padding:20px;color:#f77;font-family:monospace;font-size:13px;white-space:pre-wrap">שגיאה: '+e.message+'<br><br>'+e.stack+'</div>';}
 </script>
 </body>

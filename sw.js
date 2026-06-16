@@ -1,5 +1,5 @@
-const C='karbyfit-v2';
-const ASSETS=['./','./index.html','./dumbbells.html','./manifest.json','./icon-180.png','./icon-192.png','./icon-512.png'];
+const C='karbyfit-v3';
+const ASSETS=['./','./index.html','./dumbbells.html','./manifest.json','./manifest-db.json','./icon-180.png','./icon-192.png','./icon-512.png'];
 self.addEventListener('install',e=>{
   e.waitUntil(caches.open(C).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()).catch(()=>{}));
 });
