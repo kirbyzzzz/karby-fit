@@ -68,6 +68,48 @@ input::placeholder{color:var(--txt3)}
 .pb{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;margin:6px 0 14px}
 .pbf{height:100%;background:var(--acc2);border-radius:3px}
 .hmc{height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--txt3)}
+
+/* Fullscreen timer overlay */
+#tov{display:none;position:fixed;inset:0;z-index:200;background:rgba(5,5,8,0.98);backdrop-filter:blur(6px);flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:24px}
+#tov.on{display:flex}
+#tov-ctx{font-size:15px;color:var(--acc);font-weight:500;letter-spacing:.3px}
+#tov-ring{position:relative;width:min(74vw,300px);aspect-ratio:1}
+#tov-ring svg{width:100%;height:100%}
+#tov-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:clamp(56px,18vw,92px);font-weight:700;letter-spacing:-3px;color:#fff}
+#tov-name{font-size:16px;color:var(--txt2);text-align:center;max-width:90%}
+#tov-ctrls{display:flex;gap:14px;align-items:center}
+#tov-ctrls button{width:64px;height:64px;border-radius:50%;font-size:16px;font-weight:600;background:var(--bg2);border:0.5px solid var(--bdr2);display:flex;align-items:center;justify-content:center}
+#tov-pause{font-size:24px!important}
+#tov-skip{padding:13px 30px;border-radius:24px;font-size:15px;font-weight:500;background:var(--acc2);border:none;color:#fff}
+
+/* Progress photo prompt */
+#pp{display:none;position:fixed;inset:0;z-index:210;background:rgba(0,0,0,0.85);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:24px}
+#pp.on{display:flex}
+#pp-card{background:var(--bg2);border:0.5px solid var(--bdr2);border-radius:22px;padding:26px 22px;text-align:center;max-width:340px;width:100%}
+#pp-emoji{font-size:46px;margin-bottom:6px}
+#pp-title{font-size:18px;font-weight:600;margin-bottom:6px}
+#pp-sub{font-size:13px;color:var(--txt2);margin-bottom:18px;line-height:1.5}
+#pp-shot{width:100%;padding:14px;border-radius:14px;font-size:15px;font-weight:500;background:var(--acc2);border:none;color:#fff;margin-bottom:8px}
+#pp-later{width:100%;padding:11px;border-radius:14px;font-size:13px;color:var(--txt3);background:transparent;border:none}
+#pp-thumb img{width:100%;border-radius:14px;margin-top:12px}
+
+/* Water + notes + badges */
+.wbtn{width:42px;height:42px;border-radius:50%;font-size:20px;font-weight:600;display:flex;align-items:center;justify-content:center;background:var(--bg3);border:0.5px solid var(--bdr2);color:var(--acc)}
+.note-chip{padding:7px 13px;border-radius:20px;font-size:13px;background:var(--bg2);border:0.5px solid var(--bdr2);color:var(--txt2)}
+.note-chip.on{background:var(--acc-bg);border-color:var(--acc-bd);color:var(--acc)}
+.badge{aspect-ratio:1;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px;background:var(--bg2);border:0.5px solid var(--bdr);text-align:center}
+.badge.lk{opacity:.35;filter:grayscale(1)}
+.badge-i{font-size:26px;line-height:1}
+.badge-t{font-size:9px;color:var(--txt3);line-height:1.2}
+.badge.un .badge-t{color:var(--acc)}
+.ph-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.ph-cell{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--bg3)}
+.ph-cell img{width:100%;height:100%;object-fit:cover}
+.ph-day{position:absolute;bottom:0;right:0;left:0;background:linear-gradient(transparent,rgba(0,0,0,0.7));color:#fff;font-size:9px;padding:8px 5px 3px;text-align:center}
+.ph-del{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:215;overflow:hidden}
+.cft{position:absolute;width:9px;height:14px;top:-20px;animation:cfall linear forwards}
+@keyframes cfall{to{transform:translateY(104vh) rotate(720deg);opacity:.9}}
 </style>
 </head>
 <body>
@@ -75,15 +117,38 @@ input::placeholder{color:var(--txt3)}
 <div id="pg-today"></div>
 <div id="pg-prog" style="display:none"></div>
 
-<div id="tw">
-  <div id="tw-inner">
-    <div>
-      <div id="tw-lbl"></div>
-      <div id="tw-num">0</div>
-    </div>
-    <button onclick="stopTimer()" style="padding:9px 18px;border-radius:20px;font-size:13px;background:var(--bg3);border-color:var(--bdr2)">⏹ עצור</button>
+<!-- Fullscreen timer -->
+<div id="tov">
+  <div id="tov-ctx"></div>
+  <div id="tov-ring">
+    <svg viewBox="0 0 220 220">
+      <circle cx="110" cy="110" r="100" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="11"/>
+      <circle id="tov-arc" cx="110" cy="110" r="100" fill="none" stroke="var(--acc2)" stroke-width="11" stroke-linecap="round" transform="rotate(-90 110 110)" stroke-dasharray="628" stroke-dashoffset="0"/>
+    </svg>
+    <div id="tov-num">0</div>
+  </div>
+  <div id="tov-name"></div>
+  <div id="tov-ctrls">
+    <button onclick="adjTimer(-15)">−15</button>
+    <button id="tov-pause" onclick="pauseTimer()">⏸</button>
+    <button onclick="adjTimer(15)">+15</button>
+  </div>
+  <button id="tov-skip" onclick="skipTimer()">דלג ←</button>
+</div>
+
+<!-- Progress photo prompt -->
+<div id="pp">
+  <div id="pp-card">
+    <div id="pp-emoji">🎉</div>
+    <div id="pp-title">כל הכבוד! סיימת את האימון</div>
+    <div id="pp-sub">צלם תמונת התקדמות — ככה תראה את השינוי בגוף לאורך הזמן.</div>
+    <button id="pp-shot" onclick="pickPhoto()">📸 צלם תמונה</button>
+    <button id="pp-later" onclick="closePP()">אחר כך</button>
+    <div id="pp-thumb"></div>
   </div>
 </div>
+<input type="file" accept="image/*" capture="user" id="photo-input" style="display:none" onchange="handlePhotoPick(this)">
+<div id="confetti"></div>
 
 <div class="tab-bar">
   <button class="tb on" id="btn-today" onclick="gotoTab('today')"><span class="tbi">🏋️</span>האימון</button>
@@ -105,6 +170,7 @@ const SCHED=[
 const TNAMES={upper:'גוף עליון',lower:'גוף תחתון',core:'ליבה',rest:'מנוחה אקטיבית'};
 const TEMOJI={upper:'💪',lower:'🦵',core:'⚡',rest:'🧘'};
 const FOODS=['ביצים','קוטג׳','לחם','אורז','עוף','שיבולת שועל','בננה','טונה','גבינה','פסטה'];
+const NOTES=['💪 מלא אנרגיה','🔥 אימון מעולה','✅ הגב הרגיש טוב','😮‍💨 היה קשה','📈 התחזקתי','😴 הייתי עייף','⚠️ כאב גב','⏱️ קצר היום'];
 const WARMUP=[{n:'קפיצות במקום',t:30},{n:'מעגולי ידיים',t:20},{n:'מעגולי ירכיים',t:20},{n:'Cat-cow',t:30},{n:'Leg swings',t:20}];
 
 const WKT={
@@ -190,7 +256,7 @@ const WKT={
 
 // ── Timer ─────────────────────────────────────────────
 function parseSec(s){const m=(s||'').match(/\d+/);return m?+m[0]:0;}
-let _tmr={id:null,sec:0,cb:null};
+let _tmr={id:null,sec:0,total:0,cb:null,paused:false};
 function beep(){
   try{
     const ac=new(window.AudioContext||window.webkitAudioContext)();
@@ -205,46 +271,68 @@ function beep(){
     });
   }catch(e){}
 }
+const _ARC=628; // 2·π·100
+function _renderTmr(){
+  const el=document.getElementById('tov-num');
+  el.textContent=_tmr.sec;
+  el.style.color=_tmr.sec<=5?'#E24B4A':_tmr.sec<=10?'#EF9F27':'#fff';
+  const arc=document.getElementById('tov-arc');
+  const frac=_tmr.total>0?_tmr.sec/_tmr.total:0;
+  arc.style.strokeDashoffset=(_ARC*(1-frac)).toFixed(1);
+  arc.style.stroke=_tmr.sec<=5?'#E24B4A':_tmr.sec<=10?'#EF9F27':'var(--acc2)';
+}
 function stopTimer(){
   if(_tmr.id){clearInterval(_tmr.id);_tmr.id=null;}
-  _tmr.cb=null;
-  document.getElementById('tw').style.display='none';
+  _tmr.cb=null;_tmr.paused=false;
+  document.getElementById('tov').classList.remove('on');
 }
-function updateTW(){
-  const el=document.getElementById('tw-num');
-  el.textContent=_tmr.sec+'ש׳';
-  el.style.color=_tmr.sec<=5?'#E24B4A':_tmr.sec<=10?'#EF9F27':'var(--acc)';
-}
-function startTimer(sec,lbl,cb){
-  stopTimer();
-  _tmr.sec=sec;_tmr.cb=cb||null;
-  document.getElementById('tw').style.display='block';
-  document.getElementById('tw-lbl').textContent=lbl;
-  updateTW();
+function startTimer(sec,ctx,cb,name){
+  if(_tmr.id)clearInterval(_tmr.id);
+  _tmr={id:null,sec:sec,total:sec,cb:cb||null,paused:false};
+  document.getElementById('tov-ctx').textContent=ctx||'';
+  document.getElementById('tov-name').textContent=name||'';
+  document.getElementById('tov-pause').textContent='⏸';
+  document.getElementById('tov').classList.add('on');
+  _renderTmr();
   _tmr.id=setInterval(()=>{
+    if(_tmr.paused)return;
     _tmr.sec--;
     if(_tmr.sec<=0){
-      _tmr.sec=0;updateTW();
+      _tmr.sec=0;_renderTmr();
       const fn=_tmr.cb;_tmr.cb=null;
-      stopTimer();beep();if(fn)fn();
-    }else updateTW();
+      clearInterval(_tmr.id);_tmr.id=null;
+      document.getElementById('tov').classList.remove('on');
+      beep();if(fn)fn();
+    }else _renderTmr();
   },1000);
 }
+function pauseTimer(){_tmr.paused=!_tmr.paused;document.getElementById('tov-pause').textContent=_tmr.paused?'▶':'⏸';}
+function adjTimer(n){_tmr.sec=Math.max(1,_tmr.sec+n);if(_tmr.sec>_tmr.total)_tmr.total=_tmr.sec;_renderTmr();}
+function skipTimer(){const fn=_tmr.cb;_tmr.cb=null;if(_tmr.id){clearInterval(_tmr.id);_tmr.id=null;}_tmr.paused=false;document.getElementById('tov').classList.remove('on');if(fn)fn();}
 
 // ── Guided ────────────────────────────────────────────
 let G={on:false,exs:[],ei:0,si:0};
 function gCurV(){return G.exs[G.ei].v;}
 function gCurName(){return G.exs[G.ei].ex.n;}
 function gSetCount(){const m=gCurV()[0].match(/^(\d+)/);return m?+m[1]:3;}
+// parse a variant into {reps, timed, hold, rest}
+function gParse(){
+  const v=gCurV();const repsPart=(v[0].split('×')[1]||v[0]).trim();
+  const timed=/ש/.test(repsPart);
+  return {reps:repsPart,timed,hold:parseSec(repsPart),rest:parseSec(v[2])};
+}
 function updateGW(){
   const el=document.getElementById('gw');if(!el)return;
   if(!G.on){el.style.display='none';return;}
   el.style.display='block';
-  const total=gSetCount();
+  const total=gSetCount();const p=gParse();
   document.getElementById('gw-info').textContent=`תרגיל ${G.ei+1}/${G.exs.length} · סט ${G.si+1}/${total}`;
   document.getElementById('gw-name').textContent=gCurName();
+  const tgt=document.getElementById('gw-target');
+  if(tgt)tgt.textContent=p.timed?`🧘 החזק ${p.reps}`:`💪 ${p.reps} חזרות`;
   const btn=document.getElementById('gw-btn');
-  btn.textContent=`▶ התחל סט ${G.si+1}`;btn.onclick=gStartSet;
+  btn.textContent=p.timed?`▶ התחל החזקה (${p.hold}ש׳)`:'✓ סיימתי את הסט';
+  btn.onclick=p.timed?gDoTimed:gAfterSet;
 }
 function startGuided(){
   const d=viewDay||getDay();const {t}=SCHED[d-1];
@@ -255,24 +343,30 @@ function startGuided(){
   document.getElementById('gw').scrollIntoView({behavior:'smooth',block:'center'});
 }
 function stopGuided(){G.on=false;stopTimer();updateGW();}
-function gStartSet(){
-  const v=gCurV();
-  const btn=document.getElementById('gw-btn');
-  btn.textContent='⏭ דלג למנוחה';btn.onclick=()=>{stopTimer();gAfterWork();};
-  startTimer(parseSec(v[1]),`⏱ סט ${G.si+1} — ${gCurName()}`,gAfterWork);
+function gDoTimed(){
+  const p=gParse();
+  startTimer(p.hold,`סט ${G.si+1} · החזקה`,gAfterSet,gCurName());
 }
-function gAfterWork(){
-  const v=gCurV();
-  const btn=document.getElementById('gw-btn');
-  btn.textContent='⏭ דלג לסט הבא';btn.onclick=()=>{stopTimer();gAfterRest();};
-  startTimer(parseSec(v[2]),'💤 מנוחה',gAfterRest);
-}
-function gAfterRest(){
+function gAfterSet(){
   const total=gSetCount();
-  if(G.si<total-1)G.si++;
-  else if(G.ei<G.exs.length-1){G.ei++;G.si=0;}
-  else{G.on=false;updateGW();toggleDone(viewDay||getDay());return;}
+  const lastSet=G.si>=total-1, lastEx=G.ei>=G.exs.length-1;
+  if(lastSet&&lastEx){gFinish();return;}
+  const p=gParse();
+  startTimer(p.rest,`סט ${G.si+1}/${total} · מנוחה 💤`,gAdvance,gCurName());
+}
+function gAdvance(){
+  const total=gSetCount();
+  if(G.si<total-1)G.si++; else {G.ei++;G.si=0;}
   updateGW();
+  const gw=document.getElementById('gw');if(gw)gw.scrollIntoView({behavior:'smooth',block:'center'});
+}
+function gFinish(){
+  G.on=false;updateGW();
+  const d=viewDay||getDay();const log=getLog(d);
+  if(!log.done){log.done=true;save();}
+  renderToday();
+  celebrate();
+  setTimeout(()=>promptProgressPhoto(true),700);
 }
 
 // ── Data ──────────────────────────────────────────────
@@ -370,8 +464,9 @@ function renderToday(){
       <div id="gw-info" style="font-size:11px;color:var(--acc)"></div>
       <button onclick="stopGuided()" style="border:none;background:transparent;color:var(--txt3);font-size:12px;padding:2px 6px">✕</button>
     </div>
-    <div id="gw-name" style="font-size:16px;font-weight:500;margin-bottom:10px"></div>
-    <button id="gw-btn" style="width:100%;padding:12px;border-radius:12px;font-size:14px;font-weight:500;background:var(--acc2);border:none;color:#fff"></button>
+    <div id="gw-name" style="font-size:16px;font-weight:500;margin-bottom:2px"></div>
+    <div id="gw-target" style="font-size:13px;color:var(--acc);margin-bottom:10px"></div>
+    <button id="gw-btn" style="width:100%;padding:13px;border-radius:12px;font-size:15px;font-weight:500;background:var(--acc2);border:none;color:#fff"></button>
   </div>`;
 
   // Warmup
@@ -411,7 +506,9 @@ function renderToday(){
       const swapped=log.ov[i]!=null;
       const useEx=swapped?WKT[t][log.ov[i]]:ex;
       const v=exVar(useEx,vi);if(!v)return;
-      const ws=parseSec(v[1]);const rs=parseSec(v[2]);
+      const rs=parseSec(v[2]);
+      const repsPart=(v[0].split('×')[1]||v[0]).trim();
+      const isTimed=/ש/.test(repsPart);const hold=parseSec(repsPart);
       const swapList=WKT[t].map((alt,j)=>j===i?'':`<button onclick="swapEx(${d},${i},${j})" style="display:block;width:100%;text-align:right;margin-bottom:4px;font-size:12px;padding:8px 12px;border-radius:10px;background:var(--bg3);border-color:var(--bdr2)">${alt.n}</button>`).join('');
       h+=`<div class="ex-row" id="${id}">
         <div class="ex-head" onclick="toggleEx('${id}')">
@@ -431,8 +528,8 @@ function renderToday(){
             ${useEx.tip?`<div class="tip">💡 ${useEx.tip}</div>`:''}
             <a href="${useEx.yt}" target="_blank" class="yt">▶ סרטון הסבר</a>
             <div style="display:flex;gap:7px;margin-top:11px">
-              <button class="tm-btn tm-work" onclick="startTimer(${ws},'⏱ סט')">⏱ סט · ${ws}ש׳</button>
-              <button class="tm-btn tm-rest" onclick="startTimer(${rs},'💤 מנוחה')">💤 מנוחה · ${rs}ש׳</button>
+              ${isTimed?`<button class="tm-btn tm-work" onclick="startTimer(${hold},'החזקה 🧘',null,'${useEx.n}')">▶ החזקה · ${hold}ש׳</button>`:''}
+              <button class="tm-btn tm-rest" onclick="startTimer(${rs},'מנוחה 💤',null,'${useEx.n}')">💤 מנוחה · ${rs}ש׳</button>
             </div>
             <div style="display:flex;gap:7px;margin-top:8px">
               <button onclick="toggleSwap('${id}')" style="flex:1;font-size:11px;padding:6px 10px;border-radius:20px">⇄ החלף תרגיל</button>
@@ -476,6 +573,26 @@ function renderToday(){
     <div id="fl"></div>
   </div>`;
 
+  // Water
+  const water=log.water||0;
+  h+=`<div class="sec">💧 מים</div>
+  <div class="card" style="display:flex;align-items:center;justify-content:space-between">
+    <button class="wbtn" onclick="addWater(${d},-1)">−</button>
+    <div style="text-align:center">
+      <div style="font-size:26px;font-weight:600;color:var(--acc)" id="water-n">${water}</div>
+      <div style="font-size:11px;color:var(--txt3)">כוסות (יעד 8)</div>
+    </div>
+    <button class="wbtn" onclick="addWater(${d},1)">+</button>
+  </div>`;
+
+  // Daily notes
+  h+=`<div class="sec">📝 איך היה היום?</div>
+  <div class="card">
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      ${NOTES.map(n=>`<button class="note-chip${(log.notes||[]).includes(n)?' on':''}" onclick="toggleNote(${d},'${n}')">${n}</button>`).join('')}
+    </div>
+  </div>`;
+
   // Metrics
   h+=`<div class="sec">📊 מדדים</div>
   <div class="card">
@@ -513,7 +630,7 @@ function toggleEx(id){
   else{b.classList.add('open');if(arr)arr.style.transform='rotate(90deg)';}
 }
 
-function toggleDone(d){const l=getLog(d);l.done=!l.done;save();renderToday();}
+function toggleDone(d){const l=getLog(d);const was=l.done;l.done=!l.done;save();renderToday();if(!was&&l.done){celebrate();setTimeout(()=>promptProgressPhoto(true),700);}}
 function addFood(d,f){getLog(d).food.push(f);save();renderFL(d);}
 function addFoodCustom(d){const inp=document.getElementById('fi');if(!inp||!inp.value.trim())return;addFood(d,inp.value.trim());inp.value='';}
 function rmFood(d,i){getLog(d).food.splice(i,1);save();renderFL(d);}
@@ -539,6 +656,86 @@ function renderFL(d){
   el.innerHTML=food.map((f,i)=>`<div class="food-item"><span style="color:var(--txt2)">· ${f}</span><button onclick="rmFood(${d},${i})" class="rm">✕</button></div>`).join('');
 }
 
+// ── Water + Notes + Height ────────────────────────────
+function addWater(d,n){const l=getLog(d);l.water=Math.max(0,(l.water||0)+n);save();const el=document.getElementById('water-n');if(el)el.textContent=l.water;}
+function toggleNote(d,note){const l=getLog(d);l.notes=l.notes||[];const i=l.notes.indexOf(note);if(i>=0)l.notes.splice(i,1);else l.notes.push(note);save();renderToday();}
+function saveHeight(v){data.height=v?parseFloat(v):null;save();gotoTab('prog');}
+
+// ── Confetti ──────────────────────────────────────────
+function celebrate(){
+  const box=document.getElementById('confetti');if(!box)return;
+  const cols=['#AFA9EC','#7F77DD','#5BD17F','#EF9F27','#fff'];
+  for(let i=0;i<70;i++){
+    const c=document.createElement('div');c.className='cft';
+    c.style.left=Math.random()*100+'vw';
+    c.style.background=cols[i%cols.length];
+    c.style.animationDuration=(1.6+Math.random()*1.4)+'s';
+    c.style.animationDelay=(Math.random()*0.4)+'s';
+    box.appendChild(c);
+  }
+  beep();
+  setTimeout(()=>{box.innerHTML='';},3600);
+}
+
+// ── Progress photos (IndexedDB) ───────────────────────
+function _openDB(){return new Promise((res,rej)=>{try{const r=indexedDB.open('karbyfit',1);r.onupgradeneeded=()=>r.result.createObjectStore('photos',{keyPath:'id',autoIncrement:true});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);}catch(e){rej(e);}});}
+async function addPhoto(img){try{const db=await _openDB();await new Promise((res,rej)=>{const tx=db.transaction('photos','readwrite');tx.objectStore('photos').add({ts:Date.now(),round:data.round||1,day:viewDay||getDay(),img});tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});return true;}catch(e){return false;}}
+async function getPhotos(){try{const db=await _openDB();return await new Promise(res=>{const tx=db.transaction('photos','readonly');const q=tx.objectStore('photos').getAll();q.onsuccess=()=>res(q.result||[]);q.onerror=()=>res([]);});}catch(e){return [];}}
+async function delPhoto(id){if(!confirm('למחוק את התמונה?'))return;try{const db=await _openDB();await new Promise(res=>{const tx=db.transaction('photos','readwrite');tx.objectStore('photos').delete(id);tx.oncomplete=res;tx.onerror=res;});}catch(e){}renderPhotos();}
+function compressImg(file,max){return new Promise((res,rej)=>{const img=new Image();const url=URL.createObjectURL(file);img.onload=()=>{const cv=document.createElement('canvas');let{width:w,height:hh}=img;if(w>max||hh>max){const s=max/Math.max(w,hh);w=Math.round(w*s);hh=Math.round(hh*s);}cv.width=w;cv.height=hh;cv.getContext('2d').drawImage(img,0,0,w,hh);URL.revokeObjectURL(url);res(cv.toDataURL('image/jpeg',0.8));};img.onerror=rej;img.src=url;});}
+function pickPhoto(){document.getElementById('photo-input').click();}
+async function handlePhotoPick(input){
+  if(!input.files||!input.files[0])return;
+  const img=await compressImg(input.files[0],720);
+  await addPhoto(img);input.value='';
+  const thumb=document.getElementById('pp-thumb');
+  if(thumb&&document.getElementById('pp').classList.contains('on')){
+    thumb.innerHTML=`<img src="${img}">`;
+    document.getElementById('pp-title').textContent='נשמר! 💜';
+    document.getElementById('pp-sub').textContent='התמונה נוספה לגלריית ההתקדמות שלך.';
+    document.getElementById('pp-shot').textContent='📸 עוד אחת';
+    document.getElementById('pp-later').textContent='סגור';
+  }
+  renderPhotos();
+}
+function promptProgressPhoto(){
+  document.getElementById('pp-emoji').textContent='🎉';
+  document.getElementById('pp-title').textContent='כל הכבוד! סיימת את האימון';
+  document.getElementById('pp-sub').textContent='צלם תמונת התקדמות — ככה תראה את השינוי בגוף לאורך הזמן.';
+  document.getElementById('pp-shot').textContent='📸 צלם תמונה';
+  document.getElementById('pp-later').textContent='אחר כך';
+  document.getElementById('pp-thumb').innerHTML='';
+  document.getElementById('pp').classList.add('on');
+}
+function closePP(){document.getElementById('pp').classList.remove('on');}
+async function renderPhotos(){
+  const el=document.getElementById('ph-wrap');if(!el)return;
+  const photos=(await getPhotos()).sort((a,b)=>a.ts-b.ts);
+  if(!photos.length){el.innerHTML=`<div style="font-size:12px;color:var(--txt3)">עוד אין תמונות. סיים אימון כדי לצלם את הראשונה 📸</div>`;return;}
+  el.innerHTML=`<div class="ph-grid">`+photos.map(p=>{
+    const dt=new Date(p.ts);const lbl=`${dt.getDate()}/${dt.getMonth()+1}`;
+    return `<div class="ph-cell"><img src="${p.img}"><button class="ph-del" onclick="delPhoto(${p.id})">✕</button><div class="ph-day">${lbl}</div></div>`;
+  }).join('')+`</div>`;
+}
+
+// ── Achievements ──────────────────────────────────────
+function getAchievements(){
+  const done=Object.values(data.logs).filter(l=>l.done).length;
+  const streak=getStreak();
+  const fullWeek=[1,2,3,4].some(w=>SCHED.filter(s=>s.wk===w).every(s=>getLog(s.d).done));
+  const hasNote=Object.values(data.logs).some(l=>(l.notes||[]).length);
+  return [
+    {i:'🎯',t:'אימון ראשון',un:done>=1},
+    {i:'💪',t:'5 אימונים',un:done>=5},
+    {i:'🔥',t:'7 ימים רצוף',un:streak>=7},
+    {i:'📅',t:'שבוע מלא',un:fullWeek},
+    {i:'🏅',t:'10 אימונים',un:done>=10},
+    {i:'📝',t:'תיעדת יום',un:hasNote},
+    {i:'⚡',t:'20 אימונים',un:done>=20},
+    {i:'🏆',t:'מחזור שלם',un:(data.round||1)>1||done>=30},
+  ];
+}
+
 // ── Progress ──────────────────────────────────────────
 function renderProg(){
   const d=getDay();const done=SCHED.filter(({d:x})=>getLog(x).done).length;
@@ -552,8 +749,23 @@ function renderProg(){
     <div class="stat"><div class="stat-n">${pct}%</div><div class="stat-l">מהתוכנית</div></div>
   </div>
   <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--txt3);margin-bottom:4px"><span>התקדמות כללית</span><span>${done}/30</span></div>
-  <div class="pb"><div class="pbf" style="width:${pct}%"></div></div>
-  <div class="sec">מפת ימים</div>
+  <div class="pb"><div class="pbf" style="width:${pct}%"></div></div>`;
+
+  // This-week summary + encouragement
+  const curWk=SCHED[d-1].wk;
+  const wkDays=SCHED.filter(s=>s.wk===curWk);
+  const wkDone=wkDays.filter(s=>getLog(s.d).done).length;
+  let msg='קדימה, אתה בדרך! 💪';
+  if(wkDone>=5)msg='שבוע מטורף — אלוף! 🏆';
+  else if(wkDone>=3)msg='ממשיכים חזק, כל הכבוד! 🔥';
+  else if(wkDone===0)msg='יום חדש, הזדמנות חדשה. בוא נתחיל 🙌';
+  h+=`<div class="card" style="background:var(--acc-bg);border:0.5px solid var(--acc-bd);text-align:center;padding:14px">
+    <div style="font-size:12px;color:var(--txt3);margin-bottom:3px">סיכום שבוע ${curWk}</div>
+    <div style="font-size:15px;font-weight:500;margin-bottom:6px">${wkDone}/${wkDays.length} אימונים השבוע</div>
+    <div style="font-size:13px;color:var(--acc)">${msg}</div>
+  </div>`;
+
+  h+=`<div class="sec">מפת ימים</div>
   <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-bottom:16px">`;
   SCHED.forEach(({d:x,t})=>{
     const dn=getLog(x).done;const isCur=x===d;
@@ -576,6 +788,14 @@ function renderProg(){
   });
   h+='</div>';
 
+  // Achievements
+  h+=`<div class="sec">🏆 הישגים</div>
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">`;
+  getAchievements().forEach(a=>{
+    h+=`<div class="badge ${a.un?'un':'lk'}"><div class="badge-i">${a.i}</div><div class="badge-t">${a.t}</div></div>`;
+  });
+  h+='</div>';
+
   // Weight chart + list
   if(data.wt.length){
     const chart=weightChartSVG();
@@ -590,7 +810,34 @@ function renderProg(){
     });
     h+='</div></div>';
   }
+
+  // BMI
+  const lastWt=data.wt.length?[...data.wt].map(p=>({...p,r:p.r||1})).sort((a,b)=>((a.r-1)*30+a.d)-((b.r-1)*30+b.d)).pop().w:null;
+  h+=`<div class="sec">⚖️ BMI</div><div class="card" style="padding:14px 15px">`;
+  if(!data.height){
+    h+=`<div style="font-size:12px;color:var(--txt2);margin-bottom:8px">הזן את הגובה שלך (ס״מ) כדי לחשב BMI:</div>
+      <div style="display:flex;gap:6px"><input type="number" id="hin" placeholder="לדוגמה 178" style="flex:1"><button onclick="saveHeight(document.getElementById('hin').value)" style="background:var(--acc2);border:none;color:#fff;padding:10px 16px">שמור</button></div>`;
+  } else if(!lastWt){
+    h+=`<div style="font-size:12px;color:var(--txt2)">גובה: ${data.height} ס״מ. הזן משקל בטאב האימון כדי לחשב BMI. <button onclick="data.height=null;save();renderProg()" style="font-size:11px;padding:3px 8px;border-radius:14px;margin-right:6px">שנה גובה</button></div>`;
+  } else {
+    const bmi=lastWt/Math.pow(data.height/100,2);
+    const cat=bmi<18.5?['תת-משקל','#EF9F27']:bmi<25?['תקין','#5BD17F']:bmi<30?['עודף משקל','#EF9F27']:['השמנה','#E24B4A'];
+    h+=`<div style="display:flex;align-items:center;justify-content:space-between">
+      <div><div style="font-size:30px;font-weight:700;color:${cat[1]}">${bmi.toFixed(1)}</div><div style="font-size:12px;color:${cat[1]}">${cat[0]}</div></div>
+      <div style="text-align:left;font-size:11px;color:var(--txt3)">משקל ${lastWt} ק״ג · גובה ${data.height} ס״מ<br><button onclick="data.height=null;save();renderProg()" style="font-size:11px;padding:3px 8px;border-radius:14px;margin-top:6px">שנה גובה</button></div>
+    </div>`;
+  }
+  h+='</div>';
+
+  // Progress photos gallery
+  h+=`<div class="sec">📸 תמונות התקדמות</div>
+  <div class="card">
+    <div id="ph-wrap" style="margin-bottom:10px"></div>
+    <button onclick="pickPhoto()" style="width:100%;padding:10px;border-radius:11px;font-size:13px;background:var(--acc-bg);border-color:var(--acc-bd);color:var(--acc)">📸 הוסף תמונה</button>
+  </div>`;
+
   document.getElementById('pg-prog').innerHTML=h;
+  renderPhotos();
 }
 
 function weightChartSVG(){
