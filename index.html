@@ -616,7 +616,11 @@ function weightChartSVG(){
   </svg>`;
 }
 
-if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});}
+if('serviceWorker' in navigator){
+  let _swReloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(_swReloaded)return;_swReloaded=true;location.reload();});
+  window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').then(r=>r.update()).catch(()=>{});});
+}
 try{load();renderToday();}catch(e){document.getElementById('pg-today').innerHTML='<div style="padding:20px;color:#f77;font-family:monospace;font-size:13px;white-space:pre-wrap">שגיאה: '+e.message+'<br><br>'+e.stack+'</div>';}
 </script>
 </body>
