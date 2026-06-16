@@ -377,7 +377,7 @@ function gFinish(){
   const d=viewDay||getDay();const log=getLog(d);
   if(!log.done){log.done=true;log.doneAt=Date.now();save();}
   renderToday();
-  celebrate();
+  celebrate();publishStats();
   setTimeout(()=>promptProgressPhoto(true),700);
 }
 
@@ -642,7 +642,7 @@ function toggleEx(id){
   else{b.classList.add('open');if(arr)arr.style.transform='rotate(90deg)';}
 }
 
-function toggleDone(d){const l=getLog(d);const was=l.done;l.done=!l.done;if(!was&&l.done)l.doneAt=Date.now();save();renderToday();if(!was&&l.done){celebrate();setTimeout(()=>promptProgressPhoto(true),700);}}
+function toggleDone(d){const l=getLog(d);const was=l.done;l.done=!l.done;if(!was&&l.done)l.doneAt=Date.now();save();renderToday();if(!was&&l.done){celebrate();publishStats();setTimeout(()=>promptProgressPhoto(true),700);}}
 function addFood(d,f){getLog(d).food.push(f);save();renderFL(d);}
 function addFoodCustom(d){const inp=document.getElementById('fi');if(!inp||!inp.value.trim())return;addFood(d,inp.value.trim());inp.value='';}
 function rmFood(d,i){getLog(d).food.splice(i,1);save();renderFL(d);}
@@ -803,6 +803,48 @@ function getAchievements(){
   ];
 }
 
+// ── Live comparison (Firebase Realtime DB REST) ───────
+// Paste your free Firebase DB URL into FB.url (see FIREBASE_SETUP.txt). Until then, no data leaves the device.
+const FB={url:'PASTE_FIREBASE_URL_HERE', me:'tom', other:'omer'};
+const FB_NAMES={tom:'תום', omer:'עומר'};
+function fbReady(){return FB.url && !/PASTE_|YOUR-PROJECT/i.test(FB.url);}
+function myStats(){
+  const done=Object.values(data.logs).filter(l=>l.done).length;
+  const d=getDay();const curWk=SCHED[d-1].wk;
+  const wkDays=SCHED.filter(s=>s.wk===curWk);
+  const weekDone=wkDays.filter(s=>getLog(s.d).done).length;
+  const year=new Date().getFullYear(),mo=new Date().getMonth();
+  let monthDone=0;Object.values(data.logs).forEach(l=>{if(l.done&&l.doneAt){const dt=new Date(l.doneAt);if(dt.getFullYear()===year&&dt.getMonth()===mo)monthDone++;}});
+  return {name:FB_NAMES[FB.me],done,streak:getStreak(),weekDone,weekTotal:wkDays.length,consistency:Math.min(100,Math.round(done/Math.max(1,d)*100)),monthDone,updated:Date.now()};
+}
+async function publishStats(){if(!fbReady())return;try{await fetch(FB.url.replace(/\/+$/,'')+'/stats/'+FB.me+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(myStats())});}catch(e){}}
+async function renderCompare(){
+  const el=document.getElementById('cmp-wrap');if(!el)return;
+  if(!fbReady()){el.innerHTML=`<div style="font-size:12px;color:var(--txt2);line-height:1.7">⚡ השוואה חיה מול ${FB_NAMES[FB.other]} כבר בנויה — צריך רק לחבר פעם אחת Firebase (חינם, ~5 דק׳). ההוראות בקובץ <b>FIREBASE_SETUP.txt</b>. ברגע שתדביק את הכתובת בקוד — זה יתחיל לעבוד אוטומטית.</div>`;return;}
+  el.innerHTML=`<div style="font-size:12px;color:var(--txt3)">מסנכרן…</div>`;
+  try{
+    await publishStats();
+    const r=await fetch(FB.url.replace(/\/+$/,'')+'/stats.json');
+    const all=(await r.json())||{};
+    const me=all[FB.me]||myStats(), other=all[FB.other];
+    if(!other){el.innerHTML=`<div style="font-size:13px;color:var(--txt2);text-align:center;padding:8px">${FB_NAMES[FB.other]} עוד לא התחבר/ה 👀<br><span style="font-size:11px;color:var(--txt3)">ברגע שהאפליקציה השנייה תיפתח — תופיע כאן ההשוואה.</span><br><button onclick="renderCompare()" style="font-size:11px;padding:4px 10px;border-radius:12px;margin-top:8px">🔄 רענן</button></div>`;return;}
+    const tie=me.weekDone===other.weekDone, meWin=me.weekDone>other.weekDone;
+    const col=(s,isMe,win)=>`<div style="flex:1;text-align:center">
+      <div style="font-size:24px">${win?'🏆':'💪'}</div>
+      <div style="font-size:13px;font-weight:600;color:${isMe?'var(--acc)':'var(--txt)'}">${s.name}${isMe?' (אתה)':''}</div>
+      <div style="font-size:32px;font-weight:700;color:${win?'#EFC04B':'var(--acc)'};margin:2px 0">${s.weekDone}</div>
+      <div style="font-size:10px;color:var(--txt3)">אימונים השבוע</div>
+      <div style="margin-top:9px;font-size:12px;color:var(--txt2)">🔥 ${s.streak} רצף</div>
+      <div style="font-size:12px;color:var(--txt2)">✅ ${s.consistency}% עקביות</div>
+      <div style="font-size:12px;color:var(--txt2)">📅 ${s.monthDone} החודש</div>
+    </div>`;
+    const banner=tie?'תיקו השבוע! 🤝 קדימה, מי שובר?':`${(meWin?me:other).name} מוביל/ה השבוע! 🏆`;
+    el.innerHTML=`<div style="text-align:center;font-size:13px;font-weight:500;color:var(--acc);margin-bottom:12px">${banner}</div>
+      <div style="display:flex;gap:8px;align-items:flex-start">${col(me,true,meWin&&!tie)}<div style="width:1px;align-self:stretch;background:var(--bdr)"></div>${col(other,false,!meWin&&!tie)}</div>
+      <button onclick="renderCompare()" style="width:100%;margin-top:14px;padding:9px;border-radius:11px;font-size:12px">🔄 רענן</button>`;
+  }catch(e){el.innerHTML='<div style="font-size:12px;color:var(--txt3)">לא הצלחתי לסנכרן כרגע. <button onclick="renderCompare()" style="font-size:11px;padding:3px 8px;border-radius:12px">נסה שוב</button></div>';}
+}
+
 // ── Progress ──────────────────────────────────────────
 function renderProg(){
   const d=getDay();const done=SCHED.filter(({d:x})=>getLog(x).done).length;
@@ -863,6 +905,9 @@ function renderProg(){
   });
   h+='</div>';
 
+  // Live comparison
+  h+=`<div class="sec">🤝 השוואה מול ${FB_NAMES[FB.other]}</div><div class="card" id="cmp-wrap"></div>`;
+
   // Weight chart + list
   if(data.wt.length){
     const chart=weightChartSVG();
@@ -914,6 +959,7 @@ function renderProg(){
   document.getElementById('pg-prog').innerHTML=h;
   renderPhotos();
   renderYearCalendar();
+  renderCompare();
 }
 
 function weightChartSVG(){
