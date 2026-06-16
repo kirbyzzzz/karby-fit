@@ -83,7 +83,12 @@ input::placeholder{color:var(--txt3)}
 #pp-sub{font-size:13px;color:var(--txt2);margin-bottom:18px;line-height:1.5}
 #pp-shot{width:100%;padding:14px;border-radius:14px;font-size:15px;font-weight:500;background:var(--acc2);border:none;color:#fff;margin-bottom:8px}
 #pp-later{width:100%;padding:11px;border-radius:14px;font-size:13px;color:var(--txt3);background:transparent;border:none}
-#pp-thumb img{width:100%;border-radius:14px;margin-top:12px}
+#pp-thumb img,#pp-thumb video{width:100%;border-radius:14px;margin-top:12px}
+#pp-vid{width:100%;padding:13px;border-radius:14px;font-size:15px;font-weight:500;background:var(--bg3);border:0.5px solid var(--bdr2);color:var(--txt);margin-bottom:8px}
+.ph-play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,0.7);pointer-events:none}
+#mv{display:none;position:fixed;inset:0;z-index:220;background:rgba(0,0,0,0.92);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:18px}
+#mv.on{display:flex}
+#mv-close{position:absolute;top:16px;left:16px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.12);border:none;color:#fff;font-size:16px}
 
 /* Water + notes + badges + photos */
 .wbtn{width:42px;height:42px;border-radius:50%;font-size:20px;font-weight:600;display:flex;align-items:center;justify-content:center;background:var(--bg3);border:0.5px solid var(--bdr2);color:var(--acc)}
@@ -99,6 +104,7 @@ input::placeholder{color:var(--txt3)}
 .ph-cell img{width:100%;height:100%;object-fit:cover}
 .ph-day{position:absolute;bottom:0;right:0;left:0;background:linear-gradient(transparent,rgba(0,0,0,0.7));color:#fff;font-size:9px;padding:8px 5px 3px;text-align:center}
 .ph-del{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center}
+.ph-star{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;background:rgba(0,0,0,0.55);border:none;color:#EFC04B;font-size:12px;display:flex;align-items:center;justify-content:center}
 #confetti{position:fixed;inset:0;pointer-events:none;z-index:215;overflow:hidden}
 .cft{position:absolute;width:9px;height:14px;top:-20px;animation:cfall linear forwards}
 @keyframes cfall{to{transform:translateY(104vh) rotate(720deg);opacity:.9}}
@@ -136,11 +142,17 @@ input::placeholder{color:var(--txt3)}
     <div id="pp-title">כל הכבוד! סיימת את האימון</div>
     <div id="pp-sub">צלם תמונת התקדמות — ככה תראה את השינוי בגוף לאורך הזמן.</div>
     <button id="pp-shot" onclick="pickPhoto()">📸 צלם תמונה</button>
+    <button id="pp-vid" onclick="pickVideo()">🎥 צלם סרטון</button>
     <button id="pp-later" onclick="closePP()">אחר כך</button>
     <div id="pp-thumb"></div>
   </div>
 </div>
 <input type="file" accept="image/*" capture="user" id="photo-input" style="display:none" onchange="handlePhotoPick(this)">
+<input type="file" accept="video/*" capture="user" id="video-input" style="display:none" onchange="handleVideoPick(this)">
+<div id="mv" onclick="if(event.target.id==='mv'||event.target.id==='mv-close')closeMV()">
+  <button id="mv-close" onclick="closeMV()">✕</button>
+  <div id="mv-content"></div>
+</div>
 <div id="confetti"></div>
 
 <div class="tab-bar">
@@ -646,13 +658,13 @@ function toggleEx(id){
   if(b.classList.contains('open')){b.classList.remove('open');if(arr)arr.style.transform='';}
   else{b.classList.add('open');if(arr)arr.style.transform='rotate(90deg)';}
 }
-function toggleDone(d){const l=getLog(d);const was=l.done;l.done=!l.done;save();renderToday();if(!was&&l.done){celebrate();setTimeout(()=>promptProgressPhoto(),700);}}
+function toggleDone(d){const l=getLog(d);const was=l.done;l.done=!l.done;if(!was&&l.done)l.doneAt=Date.now();save();renderToday();if(!was&&l.done){celebrate();setTimeout(()=>promptProgressPhoto(),700);}}
 
 // ── Workout completion ────────────────────────────────
 function dayTotalSets(d){const {t,wk}=SCHED[d-1];if(t==='rest')return 0;const vi=wk<=2?0:wk===3?1:2;let n=0;WKT[t].forEach(ex=>{const v=ex.v[vi];if(v)n+=parseInt(v[0]);});return n;}
 function daySavedSets(d){const log=getLog(d);let n=0;Object.values(log.sets||{}).forEach(arr=>{(arr||[]).forEach(x=>{if(x!=null)n++;});});return n;}
 function allSetsDone(d){const tot=dayTotalSets(d);return tot>0&&daySavedSets(d)>=tot;}
-function finishWorkout(d){const l=getLog(d);if(!l.done){l.done=true;save();}renderToday();celebrate();setTimeout(()=>promptProgressPhoto(),700);}
+function finishWorkout(d){const l=getLog(d);if(!l.done){l.done=true;l.doneAt=Date.now();save();}renderToday();celebrate();setTimeout(()=>promptProgressPhoto(),700);}
 
 // ── Water + Notes + Height ────────────────────────────
 function addWater(d,n){const l=getLog(d);l.water=Math.max(0,(l.water||0)+n);save();const el=document.getElementById('water-n');if(el)el.textContent=l.water;}
@@ -674,43 +686,98 @@ function celebrate(){
 
 // ── Progress photos (IndexedDB) ───────────────────────
 function _openDB(){return new Promise((res,rej)=>{try{const r=indexedDB.open('karbyfit-db',1);r.onupgradeneeded=()=>r.result.createObjectStore('photos',{keyPath:'id',autoIncrement:true});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);}catch(e){rej(e);}});}
-async function addPhoto(img){try{const db=await _openDB();await new Promise((res,rej)=>{const tx=db.transaction('photos','readwrite');tx.objectStore('photos').add({ts:Date.now(),day:viewDay||getDay(),img});tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});return true;}catch(e){return false;}}
-async function getPhotos(){try{const db=await _openDB();return await new Promise(res=>{const tx=db.transaction('photos','readonly');const q=tx.objectStore('photos').getAll();q.onsuccess=()=>res(q.result||[]);q.onerror=()=>res([]);});}catch(e){return [];}}
-async function delPhoto(id){if(!confirm('למחוק את התמונה?'))return;try{const db=await _openDB();await new Promise(res=>{const tx=db.transaction('photos','readwrite');tx.objectStore('photos').delete(id);tx.oncomplete=res;tx.onerror=res;});}catch(e){}renderPhotos();}
+async function addMedia(kind,payload){try{const db=await _openDB();await new Promise((res,rej)=>{const tx=db.transaction('photos','readwrite');tx.objectStore('photos').add({ts:Date.now(),day:viewDay||getDay(),kind,data:payload});tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});return true;}catch(e){return false;}}
+async function getPhotos(){try{const db=await _openDB();const arr=await new Promise(res=>{const tx=db.transaction('photos','readonly');const q=tx.objectStore('photos').getAll();q.onsuccess=()=>res(q.result||[]);q.onerror=()=>res([]);});return arr.map(r=>{const val=r.data!=null?r.data:r.img;return {id:r.id,ts:r.ts,day:r.day,kind:r.kind||'photo',data:val,img:val};});}catch(e){return [];}}
+async function delPhoto(id){if(!confirm('למחוק את הפריט?'))return;try{const db=await _openDB();await new Promise(res=>{const tx=db.transaction('photos','readwrite');tx.objectStore('photos').delete(id);tx.oncomplete=res;tx.onerror=res;});}catch(e){}renderPhotos();}
 function compressImg(file,max){return new Promise((res,rej)=>{const img=new Image();const url=URL.createObjectURL(file);img.onload=()=>{const cv=document.createElement('canvas');let{width:w,height:hh}=img;if(w>max||hh>max){const s=max/Math.max(w,hh);w=Math.round(w*s);hh=Math.round(hh*s);}cv.width=w;cv.height=hh;cv.getContext('2d').drawImage(img,0,0,w,hh);URL.revokeObjectURL(url);res(cv.toDataURL('image/jpeg',0.8));};img.onerror=rej;img.src=url;});}
+function readDataURL(file){return new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(file);});}
 function pickPhoto(){document.getElementById('photo-input').click();}
+function pickVideo(){document.getElementById('video-input').click();}
+function _ppSaved(html){
+  const thumb=document.getElementById('pp-thumb');
+  if(thumb&&document.getElementById('pp').classList.contains('on')){
+    thumb.innerHTML=html;
+    document.getElementById('pp-title').textContent='נשמר! 💜';
+    document.getElementById('pp-sub').textContent='נוסף לגלריית ההתקדמות שלך.';
+    document.getElementById('pp-shot').textContent='📸 עוד תמונה';
+    document.getElementById('pp-later').textContent='סגור';
+  }
+}
 async function handlePhotoPick(input){
   if(!input.files||!input.files[0])return;
   const img=await compressImg(input.files[0],720);
-  await addPhoto(img);input.value='';
-  const thumb=document.getElementById('pp-thumb');
-  if(thumb&&document.getElementById('pp').classList.contains('on')){
-    thumb.innerHTML=`<img src="${img}">`;
-    document.getElementById('pp-title').textContent='נשמר! 💜';
-    document.getElementById('pp-sub').textContent='התמונה נוספה לגלריית ההתקדמות שלך.';
-    document.getElementById('pp-shot').textContent='📸 עוד אחת';
-    document.getElementById('pp-later').textContent='סגור';
-  }
-  renderPhotos();
+  await addMedia('photo',img);input.value='';
+  _ppSaved(`<img src="${img}">`);renderPhotos();
+}
+async function handleVideoPick(input){
+  if(!input.files||!input.files[0])return;
+  const vid=await readDataURL(input.files[0]);
+  await addMedia('video',vid);input.value='';
+  _ppSaved(`<video src="${vid}" controls playsinline style="width:100%;border-radius:14px"></video>`);renderPhotos();
 }
 function promptProgressPhoto(){
   document.getElementById('pp-emoji').textContent='🎉';
   document.getElementById('pp-title').textContent='כל הכבוד! סיימת את האימון';
-  document.getElementById('pp-sub').textContent='צלם תמונת התקדמות — ככה תראה את השינוי בגוף לאורך הזמן.';
+  document.getElementById('pp-sub').textContent='תעד התקדמות — צלם תמונה או סרטון קצר. ככה תראה את השינוי בגוף לאורך הזמן.';
   document.getElementById('pp-shot').textContent='📸 צלם תמונה';
   document.getElementById('pp-later').textContent='אחר כך';
   document.getElementById('pp-thumb').innerHTML='';
   document.getElementById('pp').classList.add('on');
 }
 function closePP(){document.getElementById('pp').classList.remove('on');}
+async function openMedia(id){
+  const m=(await getPhotos()).find(x=>x.id===id);if(!m)return;
+  document.getElementById('mv-content').innerHTML=m.kind==='video'
+    ?`<video src="${m.data}" controls autoplay playsinline style="max-width:100%;max-height:84vh;border-radius:14px"></video>`
+    :`<img src="${m.data}" style="max-width:100%;max-height:84vh;border-radius:14px">`;
+  document.getElementById('mv').classList.add('on');
+}
+function closeMV(){document.getElementById('mv').classList.remove('on');document.getElementById('mv-content').innerHTML='';}
 async function renderPhotos(){
   const el=document.getElementById('ph-wrap');if(!el)return;
-  const photos=(await getPhotos()).sort((a,b)=>a.ts-b.ts);
-  if(!photos.length){el.innerHTML=`<div style="font-size:12px;color:var(--txt3)">עוד אין תמונות. סיים אימון כדי לצלם את הראשונה 📸</div>`;return;}
-  el.innerHTML=`<div class="ph-grid">`+photos.map(p=>{
+  const media=(await getPhotos()).sort((a,b)=>a.ts-b.ts);
+  if(!media.length){el.innerHTML=`<div style="font-size:12px;color:var(--txt3)">עוד אין מדיה. סיים אימון כדי לתעד את ההתחלה 📸🎥</div>`;return;}
+  el.innerHTML=`<div class="ph-grid">`+media.map(p=>{
     const dt=new Date(p.ts);const lbl=`${dt.getDate()}/${dt.getMonth()+1}`;
-    return `<div class="ph-cell"><img src="${p.img}"><button class="ph-del" onclick="delPhoto(${p.id})">✕</button><div class="ph-day">${lbl}</div></div>`;
+    const inner=p.kind==='video'
+      ?`<video src="${p.data}" muted playsinline preload="metadata" style="width:100%;height:100%;object-fit:cover"></video><div class="ph-play">▶</div>`
+      :`<img src="${p.data}">`;
+    return `<div class="ph-cell" onclick="openMedia(${p.id})">${inner}<button class="ph-del" onclick="event.stopPropagation();delPhoto(${p.id})">✕</button><button class="ph-star" onclick="event.stopPropagation();setFeatured(${p.id})" title="הפוך לתמונת החודש">★</button><div class="ph-day">${lbl}</div></div>`;
   }).join('')+`</div>`;
+}
+async function setFeatured(id){
+  const photos=await getPhotos();const p=photos.find(x=>x.id===id);if(!p)return;
+  const dt=new Date(p.ts);data.featured=data.featured||{};
+  data.featured[dt.getFullYear()+'-'+dt.getMonth()]=id;save();
+  renderYearCalendar();
+  const b=event&&event.target;if(b){b.style.color='#fff';setTimeout(()=>{b.style.color='';},800);}
+}
+// ── Yearly calendar ───────────────────────────────────
+const MONTHS=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+async function renderYearCalendar(){
+  const el=document.getElementById('yc-wrap');if(!el)return;
+  const photos=await getPhotos();
+  const year=new Date().getFullYear(),nowM=new Date().getMonth();
+  const cnt={};
+  Object.values(data.logs).forEach(l=>{if(!l.done||!l.doneAt)return;const dt=new Date(l.doneAt);if(dt.getFullYear()===year)cnt[dt.getMonth()]=(cnt[dt.getMonth()]||0)+1;});
+  const onlyPhotos=photos.filter(p=>p.kind!=='video');
+  const photoForMonth=m=>{
+    const key=year+'-'+m;
+    if(data.featured&&data.featured[key]!=null){const f=onlyPhotos.find(p=>p.id===data.featured[key]);if(f)return f;}
+    const inM=onlyPhotos.filter(p=>{const dt=new Date(p.ts);return dt.getFullYear()===year&&dt.getMonth()===m;});
+    return inM.length?inM[inM.length-1]:null;
+  };
+  let h='';
+  for(let m=0;m<12;m++){
+    const c=cnt[m]||0,ph=photoForMonth(m);
+    if(m>nowM&&c===0&&!ph)continue;
+    h+=`<div style="display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:0.5px solid var(--bdr)">
+      <div style="width:50px;height:50px;border-radius:11px;overflow:hidden;background:var(--bg3);flex-shrink:0;display:flex;align-items:center;justify-content:center">${ph?`<img src="${ph.img}" style="width:100%;height:100%;object-fit:cover">`:'<span style="font-size:18px;opacity:.35">📷</span>'}</div>
+      <div style="flex:1"><div style="font-size:14px;font-weight:500">${MONTHS[m]}${m===nowM?' <span style="font-size:10px;color:var(--acc)">• החודש</span>':''}</div><div style="font-size:11px;color:var(--txt3)">${c} אימונים</div></div>
+      <div style="width:64px;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden"><div style="height:100%;background:var(--acc2);width:${Math.min(100,Math.round(c/15*100))}%"></div></div>
+    </div>`;
+  }
+  el.innerHTML=h||`<div style="font-size:12px;color:var(--txt3)">היומן יתמלא ככל שתתאמן ותצלם לאורך החודשים 📅</div>`;
 }
 
 // ── Achievements ──────────────────────────────────────
@@ -1007,15 +1074,24 @@ function renderProg(){
   }
   h+='</div>';
 
-  // Progress photos
-  h+=`<div class="sec">📸 תמונות התקדמות</div>
+  // Progress photos + videos
+  h+=`<div class="sec">📸🎥 תמונות וסרטונים</div>
   <div class="card">
     <div id="ph-wrap" style="margin-bottom:10px"></div>
-    <button onclick="pickPhoto()" style="width:100%;padding:10px;border-radius:11px;font-size:13px;background:var(--acc-bg);border-color:var(--acc-bd);color:var(--acc)">📸 הוסף תמונה</button>
+    <div style="display:flex;gap:7px">
+      <button onclick="pickPhoto()" style="flex:1;padding:10px;border-radius:11px;font-size:13px;background:var(--acc-bg);border-color:var(--acc-bd);color:var(--acc)">📸 תמונה</button>
+      <button onclick="pickVideo()" style="flex:1;padding:10px;border-radius:11px;font-size:13px;background:var(--acc-bg);border-color:var(--acc-bd);color:var(--acc)">🎥 סרטון</button>
+    </div>
+    <div style="font-size:10px;color:var(--txt3);margin-top:7px;text-align:center">★ על תמונה = הופך אותה לתמונת החודש ביומן</div>
   </div>`;
+
+  // Yearly calendar
+  h+=`<div class="sec">📅 יומן שנתי ${new Date().getFullYear()}</div>
+  <div class="card" id="yc-wrap"></div>`;
 
   document.getElementById('pg-prog').innerHTML=h;
   renderPhotos();
+  renderYearCalendar();
 }
 
 if('serviceWorker' in navigator){
