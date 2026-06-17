@@ -13,11 +13,11 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <style>
 :root{
-  --bg:#000;--bg2:#111;--bg3:#1a1a1a;
-  --txt:#fff;--txt2:#888;--txt3:#555;
-  --bdr:rgba(255,255,255,0.07);--bdr2:rgba(255,255,255,0.13);
-  --acc:#AFA9EC;--acc2:#7F77DD;--acc3:#534AB7;
-  --acc-bg:rgba(175,169,236,0.1);--acc-bd:rgba(175,169,236,0.3);
+  --bg:#0c0907;--bg2:#17120e;--bg3:#211a14;
+  --txt:#fff;--txt2:#9a8e84;--txt3:#5f574f;
+  --bdr:rgba(255,255,255,0.07);--bdr2:rgba(255,196,140,0.14);
+  --acc:#FFB873;--acc2:#FF7A3D;--acc3:#E0561F;
+  --acc-bg:rgba(255,140,80,0.12);--acc-bd:rgba(255,140,80,0.32);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);direction:rtl;max-width:640px;margin:0 auto;padding:14px 14px 90px;font-size:15px}
@@ -26,7 +26,7 @@ button:active{opacity:.6}
 input{font-family:inherit;font-size:14px;background:var(--bg2);border:0.5px solid var(--bdr2);border-radius:10px;padding:10px 13px;color:var(--txt);width:100%}
 input:focus{outline:none;border-color:var(--acc-bd)}
 input::placeholder{color:var(--txt3)}
-.tab-bar{position:fixed;bottom:0;right:0;left:0;background:#111;border-top:0.5px solid #222;display:flex;z-index:99;max-width:640px;margin:auto;padding-bottom:env(safe-area-inset-bottom,6px)}
+.tab-bar{position:fixed;bottom:0;right:0;left:0;background:#16110d;border-top:0.5px solid #2a221b;display:flex;z-index:99;max-width:640px;margin:auto;padding-bottom:env(safe-area-inset-bottom,6px)}
 .tb{flex:1;border:none;background:transparent;padding:10px 4px 8px;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--txt3);border-radius:0}
 .tb.on{color:var(--acc);font-weight:500}
 .tbi{font-size:22px;line-height:1}
@@ -457,7 +457,7 @@ function markSetDone(key,idx,label){
   const btn=document.getElementById(`sb-${key}-${idx}`);
   if(!btn)return;
   btn.textContent='✓ '+label;
-  btn.style.cssText='color:var(--acc);font-size:11px;padding:5px 10px;border-radius:20px;border:0.5px solid rgba(175,169,236,0.3);background:rgba(175,169,236,0.08);cursor:default';
+  btn.style.cssText='color:var(--acc);font-size:11px;padding:5px 10px;border-radius:20px;border:0.5px solid rgba(255,184,115,0.3);background:rgba(255,184,115,0.08);cursor:default';
   btn.onclick=null;
 }
 
@@ -512,7 +512,11 @@ function gotoTab(tab){
   document.getElementById('btn-metrics').className='tb'+(tab==='metrics'?' on':'');
   document.getElementById('btn-prog').className='tb'+(tab==='prog'?' on':'');
   
-  if(tab==='today')renderToday();
+  if(tab==='today'){
+    if(!document.getElementById('pg-today').firstElementChild)renderToday();
+    else document.querySelectorAll('#pg-today .dvid').forEach(v=>{v.play().catch(()=>{});});
+  }
+  if(tab!=='today')window.scrollTo(0,0);
   if(tab==='nutr')renderNutr();
   if(tab==='metrics')renderMetrics();
   if(tab==='prog')renderProg();
@@ -888,7 +892,7 @@ function renderSetRows(setsN,repsStr,weight,key,isTimed,setDur){
       <span style="font-size:13px;color:var(--txt2);flex:1">${repsStr}${weightLabel}</span>
       <span style="font-size:11px;color:var(--acc);min-width:45px;text-align:center">${isDone?fmtSW(saved):''}</span>
       <button id="${btnId}" onclick="${isDone?'':onclickFn}"
-        style="border-radius:20px;font-size:11px;padding:5px 12px;${isDone?'color:var(--acc);border-color:rgba(175,169,236,0.3);background:rgba(175,169,236,0.08);cursor:default':'color:var(--acc);border-color:var(--acc-bd);background:var(--acc-bg)'}"
+        style="border-radius:20px;font-size:11px;padding:5px 12px;${isDone?'color:var(--acc);border-color:rgba(255,184,115,0.3);background:rgba(255,184,115,0.08);cursor:default':'color:var(--acc);border-color:var(--acc-bd);background:var(--acc-bg)'}"
         ${isDone?'disabled':''}>
         ${isDone?'✓ '+fmtSW(saved):btnLabel}
       </button>
@@ -918,7 +922,7 @@ function saveHeight(v){data.height=v?parseFloat(v):null;save();gotoTab('prog');}
 // ── Confetti ──────────────────────────────────────────
 function celebrate(){
   const box=document.getElementById('confetti');if(!box)return;
-  const cols=['#AFA9EC','#7F77DD','#5BD17F','#EF9F27','#fff'];
+  const cols=['#FFB873','#FF7A3D','#5BD17F','#EF9F27','#fff'];
   for(let i=0;i<70;i++){
     const c=document.createElement('div');c.className='cft';
     c.style.left=Math.random()*100+'vw';c.style.background=cols[i%cols.length];
@@ -1095,7 +1099,7 @@ function weightChartSVG(){
   const area=`${pad},${H-pad} ${poly} ${(W-pad)},${H-pad}`;
   const dots=xy.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="var(--acc)"/>`).join('');
   return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block">
-    <polygon points="${area}" fill="rgba(127,119,221,0.12)"/>
+    <polygon points="${area}" fill="rgba(255,122,61,0.12)"/>
     <polyline points="${poly}" fill="none" stroke="var(--acc2)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
     ${dots}
     <text x="${pad}" y="14" fill="var(--txt3)" font-size="10">${max} ק״ג</text>
@@ -1234,7 +1238,7 @@ function saveApiKey(){
   LS.set('claudeApiKey',val.trim());
   document.getElementById('api-section').style.display='none';
   const btn=document.getElementById('cam-btn');
-  if(btn){btn.style.background='rgba(175,169,236,0.15)';
+  if(btn){btn.style.background='rgba(255,184,115,0.15)';
     setTimeout(()=>{btn.style.background='';},1000);}
 }
 
