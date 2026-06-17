@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>גלריית תרגילים</title>
+<style>
+:root{
+  --bg:#000;--bg2:#111;--bg3:#1a1a1a;
+  --txt:#fff;--txt2:#888;--txt3:#555;
+  --bdr:rgba(255,255,255,0.07);--bdr2:rgba(255,255,255,0.13);
+  --acc:#AFA9EC;--acc2:#7F77DD;--acc3:#534AB7;
+  --acc-bg:rgba(175,169,236,0.1);--acc-bd:rgba(175,169,236,0.3);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);direction:rtl;max-width:640px;margin:0 auto;padding:12px 12px 30px;font-size:15px}
+input{font-family:inherit;font-size:15px;background:var(--bg2);border:0.5px solid var(--bdr2);border-radius:12px;padding:12px 14px;color:var(--txt);width:100%}
+input:focus{outline:none;border-color:var(--acc-bd)}
+input::placeholder{color:var(--txt3)}
+.top{position:sticky;top:0;z-index:20;background:linear-gradient(var(--bg) 78%,transparent);padding-bottom:8px;margin:-12px -12px 4px;padding:12px 12px 8px}
+h1{font-size:20px;margin:0 0 3px;font-weight:700}
+.sub{font-size:12px;color:var(--txt3);margin-bottom:10px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:9px 0 2px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex-shrink:0;font-size:12.5px;padding:7px 13px;border-radius:20px;border:0.5px solid var(--bdr2);background:var(--bg2);color:var(--txt2);white-space:nowrap;cursor:pointer;transition:.12s}
+.chip.on{background:var(--acc);color:#000;border-color:var(--acc);font-weight:600}
+.count{font-size:11px;color:var(--txt3);margin:6px 2px 2px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.card{background:var(--bg2);border:0.5px solid var(--bdr);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .08s}
+.card:active{transform:scale(.97)}
+.thumb{width:100%;aspect-ratio:1;background:#fff;display:block;object-fit:contain}
+.ph{width:100%;aspect-ratio:1;background:var(--bg3);display:flex;align-items:center;justify-content:center;color:var(--txt3);font-size:11px}
+.meta{padding:8px 9px 9px}
+.nm{font-size:12.5px;font-weight:600;line-height:1.3;text-transform:capitalize;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:32px}
+.tag{font-size:10.5px;color:var(--acc);margin-top:4px;text-transform:capitalize}
+.empty{text-align:center;color:var(--txt3);font-size:13px;padding:50px 20px}
+#sentinel{height:40px}
+/* modal */
+.mv{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:50;display:none;align-items:center;justify-content:center;padding:20px}
+.mv.on{display:flex}
+.mbox{background:var(--bg2);border:0.5px solid var(--bdr2);border-radius:18px;max-width:420px;width:100%;max-height:92vh;overflow:auto}
+.mbox img{width:100%;background:#fff;border-radius:18px 18px 0 0;display:block}
+.mc{padding:14px 16px 18px}
+.mc h2{font-size:17px;margin:0 0 8px;text-transform:capitalize;line-height:1.3}
+.mtags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.mtag{font-size:12px;padding:5px 11px;border-radius:14px;background:var(--bg3);color:var(--txt2)}
+.mtag b{color:var(--acc);font-weight:600}
+.mbtns{display:flex;gap:8px}
+.mbtn{flex:1;text-align:center;padding:11px;border-radius:11px;font-size:13px;text-decoration:none;border:0.5px solid var(--bdr2)}
+.mclose{background:var(--bg3);color:var(--txt)}
+.myt{background:rgba(200,30,30,0.12);border-color:rgba(200,30,30,0.35);color:#fff}
+</style>
+</head>
+<body>
+<div class="top">
+  <div style="display:flex;align-items:center;gap:10px">
+    <button onclick="history.length>1?history.back():location.href='index.html'" style="background:var(--bg2);border:0.5px solid var(--bdr2);color:var(--txt);border-radius:11px;padding:8px 13px;font-size:15px;font-family:inherit;cursor:pointer">→ חזרה</button>
+    <h1 style="margin:0">🔍 גלריית תרגילים</h1>
+  </div>
+  <div class="sub" style="margin-top:6px">1324 תרגילים · חיפוש לפי שם או שריר</div>
+  <input id="q" type="search" placeholder="חפש תרגיל (באנגלית): squat, push up, plank…" autocomplete="off">
+  <div class="chips" id="chips"></div>
+</div>
+<div class="count" id="count"></div>
+<div class="grid" id="grid"></div>
+<div id="sentinel"></div>
+<div class="empty" id="empty" style="display:none">לא נמצאו תרגילים — נסה מילה אחרת 🤷</div>
+
+<div class="mv" id="mv"><div class="mbox" id="mbox"></div></div>
+
+<script src="gallery-data.js"></script>
+<script>
+const RAW='https://raw.githubusercontent.com/hasaneyldrm/exercises-dataset/main/';
+const BP={back:'גב',cardio:'אירובי',chest:'חזה','lower arms':'אמות','lower legs':'שוקיים',neck:'צוואר',shoulders:'כתפיים','upper arms':'זרועות','upper legs':'רגליים',waist:'בטן · ליבה'};
+const BORDER=[['',' הכל'],['chest','חזה'],['back','גב'],['upper legs','רגליים'],['shoulders','כתפיים'],['upper arms','זרועות'],['waist','בטן'],['lower legs','שוקיים'],['lower arms','אמות'],['cardio','אירובי'],['neck','צוואר']];
+let filt='', term='', shown=0, list=[];
+const BATCH=24;
+const grid=document.getElementById('grid');
+
+// build chips
+const chipsEl=document.getElementById('chips');
+BORDER.forEach(([k,label])=>{
+  const c=document.createElement('div');
+  c.className='chip'+(k===filt?' on':'');
+  c.textContent=label; c.dataset.k=k;
+  c.onclick=()=>{filt=k;[...chipsEl.children].forEach(x=>x.classList.toggle('on',x.dataset.k===k));apply();};
+  chipsEl.appendChild(c);
+});
+
+function apply(){
+  const t=term.trim().toLowerCase();
+  list=GAL.filter(e=>(!filt||e.b===filt)&&(!t||e.n.toLowerCase().includes(t)||e.t.toLowerCase().includes(t)||(BP[e.b]||'').includes(t)));
+  grid.innerHTML=''; shown=0;
+  document.getElementById('count').textContent=list.length+' תרגילים';
+  document.getElementById('empty').style.display=list.length?'none':'block';
+  more();
+}
+function more(){
+  const slice=list.slice(shown,shown+BATCH);
+  const frag=document.createDocumentFragment();
+  slice.forEach(e=>{
+    const i=GAL.indexOf(e);
+    const card=document.createElement('div');
+    card.className='card';
+    card.innerHTML=`<img class="thumb" loading="lazy" src="${RAW+e.g}" alt="${e.n}" onerror="this.outerHTML='<div class=ph>אין תצוגה</div>'"><div class="meta"><div class="nm">${e.n}</div><div class="tag">${BP[e.b]||e.b} · ${e.t}</div></div>`;
+    card.onclick=()=>openEx(i);
+    frag.appendChild(card);
+  });
+  grid.appendChild(frag); shown+=slice.length;
+}
+new IntersectionObserver(es=>{if(es[0].isIntersecting&&shown<list.length)more();},{rootMargin:'400px'}).observe(document.getElementById('sentinel'));
+// fallback for environments where the observer doesn't fire on programmatic scroll
+window.addEventListener('scroll',()=>{if(shown<list.length&&window.innerHeight+window.scrollY>=document.body.scrollHeight-500)more();},{passive:true});
+
+let qT;
+document.getElementById('q').addEventListener('input',e=>{term=e.target.value;clearTimeout(qT);qT=setTimeout(apply,180);});
+
+const mv=document.getElementById('mv'), mbox=document.getElementById('mbox');
+function openEx(i){
+  const e=GAL[i];
+  const yt='https://www.youtube.com/results?search_query='+encodeURIComponent(e.n+' exercise');
+  mbox.innerHTML=`<img src="${RAW+e.g}" alt="${e.n}" onerror="this.style.background='#1a1a1a'">
+    <div class="mc">
+      <h2>${e.n}</h2>
+      <div class="mtags">
+        <div class="mtag">קבוצה: <b>${BP[e.b]||e.b}</b></div>
+        <div class="mtag">שריר: <b>${e.t}</b></div>
+        <div class="mtag">ציוד: <b>${e.q}</b></div>
+      </div>
+      <div class="mbtns">
+        <a class="mbtn myt" href="${yt}" target="_blank" rel="noopener">▶ סרטון הסבר</a>
+        <div class="mbtn mclose" onclick="closeEx()">סגור</div>
+      </div>
+    </div>`;
+  mv.classList.add('on');
+}
+function closeEx(){mv.classList.remove('on');mbox.innerHTML='';}
+mv.onclick=e=>{if(e.target===mv)closeEx();};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeEx();});
+
+apply();
+</script>
+</body>
+</html>

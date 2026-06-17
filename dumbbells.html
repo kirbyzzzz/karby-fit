@@ -73,6 +73,7 @@ input::placeholder{color:var(--txt3)}
 #tov-pause{font-size:24px!important}
 #tov-done{padding:15px 36px;border-radius:24px;font-size:16px;font-weight:600;background:var(--acc2);border:none;color:#fff}
 #tov-skip{padding:11px 26px;border-radius:24px;font-size:14px;font-weight:500;background:var(--bg2);border:0.5px solid var(--bdr2);color:var(--txt2)}
+#tov-x{position:absolute;top:18px;left:18px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:16px}
 
 /* Progress photo prompt */
 #pp{display:none;position:fixed;inset:0;z-index:210;background:rgba(0,0,0,0.85);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:24px}
@@ -89,6 +90,11 @@ input::placeholder{color:var(--txt3)}
 #mv{display:none;position:fixed;inset:0;z-index:220;background:rgba(0,0,0,0.92);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:18px}
 #mv.on{display:flex}
 #mv-close{position:absolute;top:16px;left:16px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.12);border:none;color:#fff;font-size:16px}
+.acc{margin-bottom:8px}
+.acc-h{width:100%;display:flex;justify-content:space-between;align-items:center;background:var(--bg2);border:0.5px solid var(--bdr2);border-radius:14px;padding:15px 16px;font-size:15px;font-weight:500;color:var(--txt)}
+.acc-arr{color:var(--txt3);font-size:18px}
+.acc-b{padding:8px 2px 2px}
+.start-btn{flex:1;min-width:140px;font-size:14px;padding:13px 16px;border-radius:14px;border:none;color:#fff;font-weight:600}
 
 /* Water + notes + badges + photos */
 .wbtn{width:42px;height:42px;border-radius:50%;font-size:20px;font-weight:600;display:flex;align-items:center;justify-content:center;background:var(--bg3);border:0.5px solid var(--bdr2);color:var(--acc)}
@@ -108,15 +114,27 @@ input::placeholder{color:var(--txt3)}
 #confetti{position:fixed;inset:0;pointer-events:none;z-index:215;overflow:hidden}
 .cft{position:absolute;width:9px;height:14px;top:-20px;animation:cfall linear forwards}
 @keyframes cfall{to{transform:translateY(104vh) rotate(720deg);opacity:.9}}
+.dino-hero{position:relative;border-radius:16px;overflow:hidden;margin-bottom:14px;min-height:176px;background:#171018}
+.dino-hero video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.dino-hero .fade{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.06),rgba(0,0,0,.32) 42%,rgba(0,0,0,.82) 80%,var(--bg))}
+.dino-hero .inr{position:relative;padding:14px}
+.dino-badge{display:inline-flex;align-items:baseline;gap:5px;margin-top:11px;background:rgba(0,0,0,.42);border-radius:20px;padding:5px 11px}
+.dino-badge .nm{color:#fff;font-size:12.5px;font-weight:600}
+.dino-badge .sub{color:rgba(255,255,255,.85);font-size:11px}
+.dino-bar{height:5px;background:rgba(255,255,255,.28);border-radius:3px;overflow:hidden;margin-top:9px;max-width:230px}
+.dino-bar>i{display:block;height:100%;background:linear-gradient(90deg,#FF8A66,#FFC371);border-radius:3px;transition:width .6s}
 </style>
 </head>
 <body>
 
 <div id="pg-today"></div>
+<div id="pg-nutr" style="display:none"></div>
+<div id="pg-metrics" style="display:none"></div>
 <div id="pg-prog" style="display:none"></div>
 
 <!-- Fullscreen timer -->
 <div id="tov">
+  <button id="tov-x" onclick="stopAll()">✕</button>
   <div id="tov-ctx"></div>
   <div id="tov-ring">
     <svg viewBox="0 0 220 220">
@@ -157,7 +175,10 @@ input::placeholder{color:var(--txt3)}
 
 <div class="tab-bar">
   <button class="tb on" id="btn-today" onclick="gotoTab('today')"><span class="tbi">🏋️</span>האימון</button>
+  <button class="tb" id="btn-nutr" onclick="gotoTab('nutr')"><span class="tbi">🍎</span>תזונה</button>
+  <button class="tb" id="btn-metrics" onclick="gotoTab('metrics')"><span class="tbi">📈</span>מדדים</button>
   <button class="tb" id="btn-prog" onclick="gotoTab('prog')"><span class="tbi">📊</span>התקדמות</button>
+  <button class="tb" id="btn-gallery" onclick="location.href='gallery.html'"><span class="tbi">🔍</span>גלריה</button>
 </div>
 
 <script>
@@ -182,7 +203,7 @@ const NOTES=['💪 מלא אנרגיה','🔥 אימון מעולה','✅ הגב
 // timed:true → סט על זמן (פלאנק וכד')
 const WKT={
   upper:[
-    {n:'Dumbbell floor press',m:'חזה · טריצפס',
+    {n:'Dumbbell floor press',m:'חזה · טריצפס',gif:'gifs/db-floor-press.gif',
      v:[['3×8','5 קג',45],['3×10','5 קג',45],['4×10','5 קג',50]],
      steps:['שכב, משקולת בכל יד בגובה החזה, מרפקים ב-45°',
             'גוף שטוח — עורף, גב, ישבן ורגליים על הרצפה',
@@ -190,7 +211,7 @@ const WKT={
             'תרד לאט — 3 שניות לכיוון מטה'],
      tip:'על הרצפה = טווח מוגבל = בטוח יותר לכתפיים',
      yt:'https://www.youtube.com/results?search_query=dumbbell+floor+press+beginner'},
-    {n:'Bent-over row',m:'גב · ביצפס',
+    {n:'Bent-over row',m:'גב · ביצפס',gif:'gifs/db-bent-row.gif',
      v:[['3×8','5 קג',45],['3×10','5 קג',45],['4×10','5 קג',50]],
      steps:['כופף קדימה 45°, גב ישר, ברכיים מעט כפופות',
             'משקולות תלויות לפניך, ידיים ישרות',
@@ -198,7 +219,7 @@ const WKT={
             'הדק שרירי הגב, תרד לאט'],
      tip:'גב ישר תמיד — לא מתכופף ולא מקמר',
      yt:'https://www.youtube.com/results?search_query=dumbbell+bent+over+row+proper+form'},
-    {n:'Shoulder press',m:'כתפיים · טריצפס',
+    {n:'Shoulder press',m:'כתפיים · טריצפס',gif:'gifs/db-shoulder-press.gif',
      v:[['3×8','5 קג',45],['3×10','5 קג',45],['4×10','5 קג',50]],
      steps:['שב על כיסא, גב ישר ונשען',
             'משקולות בגובה האוזניים, מרפקים ב-90°',
@@ -206,7 +227,7 @@ const WKT={
             'תרד לאט לגובה הסנטר'],
      tip:'ישיבה = יציבות = פחות לחץ על הגב',
      yt:'https://www.youtube.com/results?search_query=seated+dumbbell+shoulder+press+beginner'},
-    {n:'Bicep curl',m:'ביצפס',
+    {n:'Bicep curl',m:'ביצפס',gif:'gifs/db-bicep-curl.gif',
      v:[['3×8','5 קג',40],['3×10','5 קג',40],['3×12','5 קג',40]],
      steps:['עמוד, ידיים לצדדים, כפות ידיים פונות קדימה',
             'כופף מרפק — הרם משקולת לכיוון הכתף',
@@ -214,7 +235,7 @@ const WKT={
             'תרד לאט — 3 שניות'],
      tip:'אל תנדנד את הגוף — הביצפס עושה הכל',
      yt:'https://www.youtube.com/results?search_query=dumbbell+bicep+curl+proper+form+beginner'},
-    {n:'Overhead tricep extension',m:'טריצפס',
+    {n:'Overhead tricep extension',m:'טריצפס',gif:'gifs/db-tricep-ext.gif',
      v:[['2×8','1×5 קג',40],['3×8','1×5 קג',40],['3×10','1×5 קג',40]],
      steps:['תפוס משקולת אחת בשתי ידיים מאחורי הראש',
             'מרפקים צמודים לאוזניים — לא מתפזרים לצדדים',
@@ -222,7 +243,7 @@ const WKT={
             'תרד לאט'],
      tip:'אחיזה בראש העליון של המשקולת — לא ב"גוף"',
      yt:'https://www.youtube.com/results?search_query=overhead+tricep+extension+dumbbell+beginner'},
-    {n:'Lateral raise',m:'כתפיים צדדיות — שב׳ 3-4 בלבד',
+    {n:'Lateral raise',m:'כתפיים צדדיות — שב׳ 3-4 בלבד',gif:'gifs/db-lateral-raise.gif',
      v:[null,['3×10','5 קג',40],['3×12','5 קג',40]],
      steps:['עמוד, ידיים לצדדים, מרפקים מעט כפופים',
             'הרם ידיים לצדדים עד גובה הכתפיים בדיוק',
@@ -232,7 +253,7 @@ const WKT={
      yt:'https://www.youtube.com/results?search_query=lateral+raise+dumbbell+proper+form'}
   ],
   lower:[
-    {n:'Goblet squat',m:'ירכיים · ישבן',
+    {n:'Goblet squat',m:'ירכיים · ישבן',gif:'gifs/db-goblet-squat.gif',
      v:[['3×10','5 קג',50],['3×12','5 קג',50],['4×12','5 קג',50]],
      steps:['אחוז משקולת אחת אנכית בשתי ידיים מול החזה',
             'רגליים קצת יותר מרוחב הכתפיים, בהונות ב-45°',
@@ -240,7 +261,7 @@ const WKT={
             'קום, לחץ עקבים, הדק ישבן'],
      tip:'המשקולת מול החזה מאפשרת ישיבה עמוקה יותר',
      yt:'https://www.youtube.com/results?search_query=goblet+squat+beginner+form'},
-    {n:'Romanian deadlift',m:'ירכיים אחוריות · ישבן',
+    {n:'Romanian deadlift',m:'ירכיים אחוריות · ישבן',gif:'gifs/db-rdl.gif',
      v:[['3×10','5 קג',50],['3×12','5 קג',50],['4×12','5 קג',50]],
      steps:['עמוד, משקולות לפניך, ברכיים מעט כפופות (לא נעולות)',
             'הטה קדימה מהאגן — לא מהגב — גב ישר לחלוטין',
@@ -248,7 +269,7 @@ const WKT={
             'קום — הדק ישבן למעלה בחוזקה'],
      tip:'גב ישר תמיד. מרגיש מתיחה בירכיים? מושלם',
      yt:'https://www.youtube.com/results?search_query=dumbbell+romanian+deadlift+beginner'},
-    {n:'Reverse lunge',m:'ירכיים · ישבן',
+    {n:'Reverse lunge',m:'ירכיים · ישבן',gif:'gifs/db-reverse-lunge.gif',
      v:[['2×8/רגל','5 קג',45],['3×8/רגל','5 קג',45],['3×10/רגל','5 קג',45]],
      steps:['עמוד, משקולת בכל יד, גוף זקוף',
             'צעד גדול אחורה עם רגל אחת',
@@ -256,7 +277,7 @@ const WKT={
             'קום דרך העקב הקדמי, החלף רגל'],
      tip:'מבט קדימה — עוזר לשיווי משקל',
      yt:'https://www.youtube.com/results?search_query=dumbbell+reverse+lunge+beginner'},
-    {n:'Sumo squat',m:'ירכיים פנימיות · ישבן',
+    {n:'Sumo squat',m:'ירכיים פנימיות · ישבן',gif:'gifs/db-sumo-squat.gif',
      v:[['3×10','5 קג',45],['3×12','5 קג',45],['4×12','5 קג',45]],
      steps:['רגליים רחבות מאוד, בהונות פונות ב-45°',
             'אחוז משקולת אחת בשתי ידיים — תלויה בין הרגליים',
@@ -264,7 +285,7 @@ const WKT={
             'קום, הדק ישבן'],
      tip:'מצוין לחיזוק הצד הפנימי של הירך',
      yt:'https://www.youtube.com/results?search_query=sumo+squat+dumbbell+beginner'},
-    {n:'Calf raises',m:'שוקיים',
+    {n:'Calf raises',m:'שוקיים',gif:'gifs/db-calf-raise.gif',
      v:[['2×15','5 קג',30],['3×15','5 קג',30],['3×20','5 קג',30]],
      steps:['עמוד, משקולת בכל יד',
             'עלה על קצות האצבעות — גבוה ככל האפשר',
@@ -274,7 +295,7 @@ const WKT={
      yt:'https://www.youtube.com/results?search_query=calf+raises+with+dumbbells'}
   ],
   core:[
-    {n:'Dead bug',m:'ליבה עמוקה · גב תחתון',
+    {n:'Dead bug',m:'ליבה עמוקה · גב תחתון',gif:'gifs/0276.gif',
      v:[['3×6/צד','-',30],['3×8/צד','-',30],['3×10/צד','-',30]],
      steps:['שכב על הגב, ידיים ישר למעלה, רגליים 90° מעל הבטן',
             'הורד יד ימין + רגל שמאל לכיוון הרצפה — לאט מאוד',
@@ -282,7 +303,7 @@ const WKT={
             'חזור, החלף צד'],
      tip:'הגב על הרצפה = כל העניין. לא מרים גב בשום מצב',
      yt:'https://www.youtube.com/watch?v=JrcoGEZn6L4'},
-    {n:'Russian twist',m:'אלכסונים',
+    {n:'Russian twist',m:'אלכסונים',gif:'gifs/russian-twist.gif',
      v:[['3×10/צד','5 קג',35],['3×12/צד','5 קג',35],['3×15/צד','5 קג',35]],
      steps:['שב, ברכיים כפופות, גוף מעט אחורה ב-45°',
             'אחוז משקולת בשתי ידיים מול החזה',
@@ -290,7 +311,7 @@ const WKT={
             'סובב שמאלה, גע ברצפה — בטן מהודקת כל הזמן'],
      tip:'ידיים קרובות לחזה = יותר שליטה',
      yt:'https://www.youtube.com/results?search_query=russian+twist+dumbbell+beginner'},
-    {n:'פלאנק',m:'ליבה · כתפיים · גב',
+    {n:'פלאנק',m:'ליבה · כתפיים · גב',gif:'gifs/plank.gif',
      v:[['2×20ש׳','-',30],['3×25ש׳','-',30],['3×35ש׳','-',30]],
      timed:true,
      steps:['הישן על האמות — לא כפות הידיים',
@@ -299,7 +320,7 @@ const WKT={
             'נשום רגיל ותחזיק'],
      tip:'תחת עולה? הורד אותו. הנח ברכיים אם צריך',
      yt:'https://www.youtube.com/results?search_query=plank+proper+form+beginner'},
-    {n:'Bird dog',m:'גב תחתון · ליבה',
+    {n:'Bird dog',m:'גב תחתון · ליבה',gif:'gifs/bird-dog.gif',
      v:[['3×6/צד','-',25],['3×8/צד','-',25],['3×10/צד','-',25]],
      steps:['על ארבע, ידיים מתחת לכתפיים, ברכיים מתחת לירכיים',
             'הרם יד ימין + רגל שמאל בו-זמנית',
@@ -307,7 +328,7 @@ const WKT={
             'החזק שנייה, חזור, החלף'],
      tip:'תדמיין שמחזיק כוס מים על הגב',
      yt:'https://www.youtube.com/watch?v=-LRjkbEy-qU'},
-    {n:'Dumbbell crunch',m:'בטן — שב׳ 3-4 בלבד',
+    {n:'Dumbbell crunch',m:'בטן — שב׳ 3-4 בלבד',gif:'gifs/crunch.gif',
      v:[null,['3×10','5 קג',30],['3×12','5 קג',30]],
      steps:['שכב, ברכיים כפופות, אחוז משקולת על החזה',
             'הדק בטן פנימה',
@@ -317,12 +338,12 @@ const WKT={
      yt:'https://www.youtube.com/results?search_query=weighted+crunch+dumbbell+beginner'}
   ],
   rest:[
-    {n:'Hip flexor stretch',t:'30ש׳/צד',s:'ברך אחת על הרצפה, דחוף אגן קדימה — מתיחה בחזית הירך'},
-    {n:"Child's pose",t:'40ש׳',s:'על ארבע, שב אחורה על עקבים, ידיים קדימה'},
-    {n:'Chest opener',t:'30ש׳',s:'קשר ידיים מאחורי הגב, הרם מעט ופתח חזה קדימה'},
-    {n:'Spinal twist',t:'30ש׳/צד',s:'שכב, הטה ברך לצד הנגדי, כתפיים על הרצפה'},
-    {n:'Hamstring stretch',t:'30ש׳/רגל',s:'שכב, הרם רגל ישר, תפוס מאחורי הירך ומשוך'},
-    {n:'Cat-cow',t:'10 חזרות',s:'על ארבע — חתול ופרה לסירוגין'}
+    {n:'Hip flexor stretch',t:'30ש׳/צד',s:'ברך אחת על הרצפה, דחוף אגן קדימה — מתיחה בחזית הירך',gif:'gifs/hip-flexor.gif'},
+    {n:"Child's pose",t:'40ש׳',s:'על ארבע, שב אחורה על עקבים, ידיים קדימה',gif:'gifs/childs-pose.gif'},
+    {n:'Chest opener',t:'30ש׳',s:'קשר ידיים מאחורי הגב, הרם מעט ופתח חזה קדימה',gif:'gifs/chest-opener.gif'},
+    {n:'Spinal twist',t:'30ש׳/צד',s:'שכב, הטה ברך לצד הנגדי, כתפיים על הרצפה',gif:'gifs/spinal-twist.gif'},
+    {n:'Hamstring stretch',t:'30ש׳/רגל',s:'שכב, הרם רגל ישר, תפוס מאחורי הירך ומשוך',gif:'gifs/hamstring.gif'},
+    {n:'Cat-cow',t:'10 חזרות',s:'על ארבע — חתול ופרה לסירוגין',gif:'gifs/cat-cow.gif'}
   ]
 };
 
@@ -396,24 +417,41 @@ function startSW(key,idx){
   T.id=setInterval(()=>{T.sec++;_tov('tov-num').textContent=fmtSW(T.sec);},1000);
 }
 function finishSW(){
-  const elapsed=T.sec,key=T.key,idx=T.idx,m=_exMap[key];
+  const elapsed=T.sec,key=T.key,idx=T.idx;
   if(T.id){clearInterval(T.id);T.id=null;}
-  const d=viewDay||getDay();
-  saveSetTime(key,idx,elapsed);markSetDone(key,idx,fmtSW(elapsed));
-  _tov('tov').classList.remove('on');beep();
-  if(allSetsDone(d)){finishWorkout(d);return;}
-  if(m&&m.rest)startCD(m.rest,'מנוחה 💤',null,m.n);
+  beep();_afterSet(key,idx,elapsed);
 }
 // Timed hold set (e.g. plank)
 function startTimedSet(key,idx){
   const m=_exMap[key];if(!m)return;
-  const d=viewDay||getDay();
-  startCD(m.setDur,`סט ${idx+1} · החזקה 🧘`,()=>{
-    saveSetTime(key,idx,m.setDur);markSetDone(key,idx,fmtSW(m.setDur));
-    if(allSetsDone(d)){finishWorkout(d);return;}
-    if(m&&m.rest)startCD(m.rest,'מנוחה 💤',null,m.n);
-  },m.n);
+  startCD(m.setDur,`סט ${idx+1} · החזקה 🧘`,()=>{_afterSet(key,idx,m.setDur);},m.n);
 }
+// Shared: after a set finishes — guided auto-advances, manual just rests
+function _afterSet(key,idx,elapsed){
+  saveSetTime(key,idx,elapsed);markSetDone(key,idx,fmtSW(elapsed));
+  const d=viewDay||getDay();const m=_exMap[key];
+  if(GSEQ&&GSEQ.on){
+    if(GSEQ.i>=GSEQ.steps.length-1){GSEQ.on=false;_tov('tov').classList.remove('on');finishWorkout(d);return;}
+    startCD(m?m.rest:45,'מנוחה 💤 · הסט הבא מתחיל אוטומטית',()=>{GSEQ.i++;gRun();},m?m.n:'');
+  } else {
+    if(allSetsDone(d)){_tov('tov').classList.remove('on');finishWorkout(d);return;}
+    if(m&&m.rest)startCD(m.rest,'מנוחה 💤',null,m.n);
+  }
+}
+// ── Auto sequences: warmup / guided workout / stretches ─
+let GSEQ=null, WSEQ=null;
+function stopAll(){if(GSEQ)GSEQ.on=false;if(WSEQ)WSEQ.on=false;cancelTimer();}
+function startGuided(){
+  const d=viewDay||getDay();const {t,wk}=SCHED[d-1];if(t==='rest')return;
+  const vi=wk<=2?0:wk===3?1:2;const steps=[];
+  WKT[t].forEach((ex,ei)=>{const v=ex.v[vi];if(!v)return;const key=`${d}_${ei}`;const setsN=parseInt(v[0]);const rp=(v[0].split('×')[1]||'');const isTimed=/ש/.test(rp);_exMap[key]={n:ex.n,rest:v[2],timed:isTimed,setDur:isTimed?parseSec(rp):0};for(let s=0;s<setsN;s++)steps.push({key,idx:s,isTimed});});
+  if(!steps.length)return;
+  GSEQ={steps,i:0,on:true};gRun();
+}
+function gRun(){if(!GSEQ||!GSEQ.on)return;const st=GSEQ.steps[GSEQ.i];if(st.isTimed)startTimedSet(st.key,st.idx);else startSW(st.key,st.idx);}
+function startWarmup(){WSEQ={i:0,on:true};wRun();}
+function wRun(){if(!WSEQ||!WSEQ.on)return;if(WSEQ.i>=WARMUP.length){WSEQ.on=false;_tov('tov').classList.remove('on');beep();return;}const w=WARMUP[WSEQ.i];startCD(w.t,`חימום ${WSEQ.i+1}/${WARMUP.length} 🔥`,()=>{WSEQ.i++;wRun();},w.n);}
+function startStretches(){const arr=WKT.rest;let i=0;const run=()=>{if(i>=arr.length){_tov('tov').classList.remove('on');beep();return;}const r=arr[i];startCD(parseSec(r.t),`מתיחה ${i+1}/${arr.length} 🧘`,()=>{i++;run();},r.n);};run();}
 
 function markSetDone(key,idx,label){
   const btn=document.getElementById(`sb-${key}-${idx}`);
@@ -465,11 +503,25 @@ function saveSleep(v){const d=viewDay||getDay();getLog(d).sleep=v?+v:null;save()
 let viewDay=null;
 function gotoTab(tab){
   document.getElementById('pg-today').style.display=tab==='today'?'block':'none';
+  document.getElementById('pg-nutr').style.display=tab==='nutr'?'block':'none';
+  document.getElementById('pg-metrics').style.display=tab==='metrics'?'block':'none';
   document.getElementById('pg-prog').style.display=tab==='prog'?'block':'none';
+  
   document.getElementById('btn-today').className='tb'+(tab==='today'?' on':'');
+  document.getElementById('btn-nutr').className='tb'+(tab==='nutr'?' on':'');
+  document.getElementById('btn-metrics').className='tb'+(tab==='metrics'?' on':'');
   document.getElementById('btn-prog').className='tb'+(tab==='prog'?' on':'');
+  
+  if(tab==='today')renderToday();
+  if(tab==='nutr')renderNutr();
+  if(tab==='metrics')renderMetrics();
   if(tab==='prog')renderProg();
 }
+// ── Collapsible accordion ─────────────────────────────
+function acc(id,title,body,open){
+  return `<div class="acc"><button class="acc-h" onclick="toggleAcc('${id}')"><span>${title}</span><span class="acc-arr" id="${id}-ar">${open?'⌄':'›'}</span></button><div class="acc-b" id="${id}-b" style="display:${open?'block':'none'}">${body}</div></div>`;
+}
+function toggleAcc(id){const b=document.getElementById(id+'-b'),a=document.getElementById(id+'-ar');if(!b)return;const op=b.style.display==='none';b.style.display=op?'block':'none';if(a)a.textContent=op?'⌄':'›';}
 
 // ── Render Today ──────────────────────────────────────
 function renderToday(){
@@ -478,46 +530,60 @@ function renderToday(){
   const vi=wk<=2?0:wk===3?1:2;
   const log=getLog(d);
 
-  let h=`<div style="margin-bottom:14px">
-    <div style="font-size:12px;color:var(--txt3);margin-bottom:3px">יום ${d} מתוך 30 · שבוע ${wk}</div>
+  const dn=dinoData();
+  let h=`<div class="dino-hero">
+    <video class="dvid" src="dino/${dn.file}.mp4" poster="dino/${dn.file}.jpg" autoplay loop muted playsinline preload="auto"></video>
+    <div class="fade"></div>
+    <div class="inr">
+    <div style="font-size:12px;color:rgba(255,255,255,.82);margin-bottom:3px;text-shadow:0 1px 3px rgba(0,0,0,.7)">יום ${d} מתוך 30 · שבוע ${wk}</div>
     <div style="display:flex;justify-content:space-between;align-items:center">
-      <div style="font-size:24px;font-weight:500">${TNAMES[t]}</div>
-      <div style="font-size:32px">${TEMOJI[t]}</div>
+      <div style="font-size:24px;font-weight:600;color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.75)">${TNAMES[t]}</div>
+      <div style="font-size:32px;filter:drop-shadow(0 1px 3px rgba(0,0,0,.5))">${TEMOJI[t]}</div>
     </div>
     <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
-      <span class="pill">🏋️ 5 קג × 2</span>
-      ${d>1?`<button onclick="viewDay=${d-1};renderToday()" style="font-size:12px;padding:5px 12px;border-radius:20px">← אתמול</button>`:''}
-      ${d<30?`<button onclick="viewDay=${d+1};renderToday()" style="font-size:12px;padding:5px 12px;border-radius:20px">מחר →</button>`:''}
+      <span class="pill" style="background:rgba(0,0,0,.45);color:#fff;border-color:rgba(255,255,255,.28)">🏋️ 5 קג × 2</span>
+      ${d>1?`<button onclick="viewDay=${d-1};renderToday()" style="font-size:12px;padding:5px 12px;border-radius:20px;background:rgba(0,0,0,.45);color:#fff;border-color:rgba(255,255,255,.28)">← אתמול</button>`:''}
+      ${d<30?`<button onclick="viewDay=${d+1};renderToday()" style="font-size:12px;padding:5px 12px;border-radius:20px;background:rgba(0,0,0,.45);color:#fff;border-color:rgba(255,255,255,.28)">מחר →</button>`:''}
       ${d!==getDay()?`<button onclick="viewDay=null;renderToday()" style="font-size:12px;padding:5px 12px;border-radius:20px;background:var(--acc-bg);border-color:var(--acc-bd);color:var(--acc)">היום</button>`:''}
+    </div>
+    <div class="dino-badge"><span class="nm">${dn.name}</span><span class="sub">· ${dn.n} החודש · ${dn.sub}</span></div>
+    <div class="dino-bar"><i style="width:${dn.pct}%"></i></div>
     </div>
   </div>`;
 
-  // Warmup
-  h+=`<div class="sec">🔥 חימום — 2 דקות</div>
-  <div class="card" style="padding:10px 14px">
-  ${WARMUP.map(w=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--bdr)">
-    <span style="font-size:13px;color:var(--txt2)">· ${w.n}</span>
-    <button onclick="startCD(${w.t},'🔥 ${w.n}')" style="padding:4px 11px;border-radius:20px;font-size:11px;background:var(--bg3);border-color:var(--bdr2);color:var(--acc);flex-shrink:0">⏱ ${w.t}ש׳</button>
-  </div>`).join('')}
-  </div>`;
-
-  // Exercises / stretches
-  h+=`<div class="sec">${t==='rest'?'🧘 מתיחות':'🏋️ תרגילים'}</div>`;
-
   if(t==='rest'){
-    WKT.rest.forEach(r=>{
-      h+=`<div class="ex-row">
-        <div style="padding:13px 15px;display:flex;justify-content:space-between;align-items:center">
-          <div>
+    let body='';
+    WKT.rest.forEach((r, i)=>{
+      const id='rest_'+i;
+      body+=`<div class="ex-row" id="${id}">
+        <div class="ex-head" onclick="toggleEx('${id}')">
+          <div style="flex:1">
             <div style="font-size:14px;font-weight:500">${r.n}</div>
             <div style="font-size:12px;color:var(--txt2);margin-top:2px">${r.s}</div>
           </div>
-          <button onclick="startCD(${parseSec(r.t)},'🧘 ${r.n}')" style="padding:6px 12px;border-radius:20px;font-size:11px;background:var(--acc-bg);border-color:var(--acc-bd);color:var(--acc);flex-shrink:0;margin-right:8px">⏱ ${parseSec(r.t)}ש׳</button>
+          <div style="font-size:16px;color:var(--txt3);margin-right:4px;transition:transform .2s" id="${id}arr">›</div>
+        </div>
+        <div class="ex-body" id="${id}b" style="padding:0 15px 14px;">
+          <div style="padding-top:12px">
+            ${r.gif ? `<div style="margin-bottom:12px; border-radius:10px; overflow:hidden; border: 0.5px solid var(--bdr); background: var(--bg3); display: flex; justify-content: center; align-items: center;"><img src="${r.gif}" loading="lazy" style="width:100%; max-height:220px; object-fit:contain;" alt="${r.n}"></div>` : ''}
+            <button onclick="startCD(${parseSec(r.t)},'🧘 ${r.n}')" style="width:100%; padding:10px; border-radius:10px; font-size:13px; background:var(--acc-bg); border-color:var(--acc-bd); color:var(--acc)">⏱ התחל מתיחה (${parseSec(r.t)}ש׳)</button>
+          </div>
         </div>
       </div>`;
     });
+    h+=`<button class="start-btn" style="background:var(--acc2);width:100%;margin-bottom:10px" onclick="startStretches()">▶ התחל מתיחות (אוטומטי)</button>`;
+    h+=acc('acc-stretch','🧘 מתיחות',body,true);
   } else {
-    let exIdx=0;
+    // Two start buttons
+    h+=`<div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="start-btn" style="background:#E07B39" onclick="startWarmup()">🔥 התחל חימום</button>
+      <button class="start-btn" style="background:var(--acc2)" onclick="startGuided()">▶ התחל אימון</button>
+    </div>`;
+    // Warmup (collapsed)
+    const wbody=WARMUP.map(w=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 12px;border-bottom:0.5px solid var(--bdr)"><span style="font-size:13px;color:var(--txt2)">· ${w.n}</span><button onclick="startCD(${w.t},'🔥 ${w.n}')" style="padding:4px 11px;border-radius:20px;font-size:11px;background:var(--bg3);border-color:var(--bdr2);color:var(--acc);flex-shrink:0">⏱ ${w.t}ש׳</button></div>`).join('');
+    h+=acc('acc-warm','🔥 חימום · 2 דקות',wbody,false);
+    // Exercises (each card collapsible already)
+    h+=`<div class="sec">🏋️ תרגילים</div>`;
     WKT[t].forEach((ex,i)=>{
       const v=ex.v[vi];if(!v)return;
       const id=`ex${d}_${i}`;
@@ -528,14 +594,9 @@ function renderToday(){
       const restSec=v[2];
       const isTimed=!!ex.timed;
       const setDur=isTimed?parseSec(repsStr):0;
-
-      // Register in _exMap for timer callbacks
       _exMap[key]={n:ex.n,rest:restSec,timed:isTimed,setDur};
-
-      // Count done sets
       const log2=getLog(d);
       const doneSets=(log2.sets[key]||[]).filter(x=>x!==undefined&&x!==null).length;
-
       h+=`<div class="ex-row" id="${id}">
         <div class="ex-head" onclick="toggleEx('${id}')">
           <div style="flex:1">
@@ -551,6 +612,7 @@ function renderToday(){
         </div>
         <div class="ex-body" id="${id}b">
           <div style="padding-top:12px">
+            ${ex.gif ? `<div style="margin-bottom:12px; border-radius:10px; overflow:hidden; border: 0.5px solid var(--bdr); background: var(--bg3); display: flex; justify-content: center; align-items: center;"><img src="${ex.gif}" loading="lazy" style="width:100%; max-height:220px; object-fit:contain;" alt="${ex.n}"></div>` : ''}
             ${ex.steps.map((s,j)=>`<div class="step"><span class="sn">${j+1}.</span><span>${s}</span></div>`).join('')}
             ${ex.tip?`<div class="tip">💡 ${ex.tip}</div>`:''}
             <a href="${ex.yt}" target="_blank" class="yt">▶ סרטון הסבר</a>
@@ -561,7 +623,6 @@ function renderToday(){
           </div>
         </div>
       </div>`;
-      exIdx++;
     });
   }
 
@@ -569,54 +630,16 @@ function renderToday(){
     ${log.done?'✅ סיימתי! לחץ לביטול':'✓ סיימתי את האימון'}
   </button>`;
 
-  // Food + camera
-  h+=renderFoodCard(d);
-
-  // Water
-  const water=log.water||0;
-  h+=`<div class="sec">💧 מים</div>
-  <div class="card" style="display:flex;align-items:center;justify-content:space-between">
-    <button class="wbtn" onclick="addWater(${d},-1)">−</button>
-    <div style="text-align:center">
-      <div style="font-size:26px;font-weight:600;color:var(--acc)" id="water-n">${water}</div>
-      <div style="font-size:11px;color:var(--txt3)">כוסות (יעד 8)</div>
-    </div>
-    <button class="wbtn" onclick="addWater(${d},1)">+</button>
-  </div>`;
-
-  // Daily notes
-  h+=`<div class="sec">📝 איך היה היום?</div>
+  // Daily notes (Workout related notes)
+  h+=`<div class="sec">📝 איך היה האימון?</div>
   <div class="card">
     <div style="display:flex;gap:6px;flex-wrap:wrap">
       ${NOTES.map(n=>`<button class="note-chip${(log.notes||[]).includes(n)?' on':''}" onclick="toggleNote(${d},'${n}')">${n}</button>`).join('')}
     </div>
   </div>`;
 
-  // Metrics
-  h+=`<div class="sec">📊 מדדים</div>
-  <div class="card">
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-      <div>
-        <div style="font-size:11px;color:var(--txt3);margin-bottom:4px">⚖️ משקל</div>
-        <input type="number" step="0.1" placeholder="ק״ג" id="wtin" style="font-size:13px;padding:8px 10px" onchange="saveWt(this.value)">
-      </div>
-      <div>
-        <div style="font-size:11px;color:var(--txt3);margin-bottom:4px">👟 צעדים</div>
-        <input type="number" placeholder="0" id="stin" style="font-size:13px;padding:8px 10px" onchange="saveSteps(this.value)">
-      </div>
-      <div>
-        <div style="font-size:11px;color:var(--txt3);margin-bottom:4px">😴 שינה שע׳</div>
-        <input type="number" step="0.5" placeholder="0" id="spin" style="font-size:13px;padding:8px 10px" onchange="saveSleep(this.value)">
-      </div>
-    </div>
-  </div>`;
-
   document.getElementById('pg-today').innerHTML=h;
-  const log2=getLog(d);
-  const wi=document.getElementById('wtin');if(wi&&log2.wt)wi.value=log2.wt;
-  const si=document.getElementById('stin');if(si&&log2.steps)si.value=log2.steps;
-  const spi=document.getElementById('spin');if(spi&&log2.sleep)spi.value=log2.sleep;
-  renderFL(d);
+  document.querySelectorAll('#pg-today .dvid').forEach(v=>{v.play().catch(()=>{});});
 
   // Restore done set buttons from saved data
   if(t!=='rest')WKT[t].forEach((ex,i)=>{
@@ -629,6 +652,227 @@ function renderToday(){
     }
   });
 }
+
+// ── Render Body (מדדים) ───────────────────────────────
+
+// ── Nutrition Page Functions (🍎 תזונה) ───────────────
+function renderNutr() {
+  const d=viewDay||getDay();
+  const log=getLog(d);
+  const water=log.water||0;
+  
+  let h=`<div style="font-size:22px;font-weight:500;margin:4px 0 14px">🍎 תזונה ונוזלים</div>`;
+  
+  // Food Logger
+  h+=acc('b-food','🍽 מעקב אוכל וקלוריות',renderFoodCard(d),true);
+  
+  // Water Tracker
+  h+=acc('b-water','💧 מעקב מים',`<div class="card" style="margin-bottom:0;display:flex;align-items:center;justify-content:space-between">
+    <button class="wbtn" onclick="addWaterNutr(${d},-1)">−</button>
+    <div style="text-align:center"><div style="font-size:26px;font-weight:600;color:var(--acc)" id="water-n">${water}</div><div style="font-size:11px;color:var(--txt3)">כוסות (יעד 8)</div></div>
+    <button class="wbtn" onclick="addWaterNutr(${d},1)">+</button></div>`,true);
+  
+  // Water alerts creator card
+  h+=`<div class="sec">📅 תזכורות מים ליומן האייפון</div>
+  <div class="card" style="padding:14px 16px; display:flex; flex-direction:column; gap:10px;">
+    <div style="font-size:13px; color:var(--txt2); line-height:1.5;">
+      רוצה לקבל תזכורות לשתות מים בטלפון גם כשהאפליקציה סגורה?
+      בלחיצה על הכפתור ייווצר קובץ יומן (<code>.ics</code>) עם 7 תזכורות יומיות קבועות. פתח את הקובץ במכשיר והוסף ליומן!
+    </div>
+    <button onclick="downloadWaterCalendar()" style="width:100%; padding:12px; border-radius:12px; font-weight:500; background:var(--acc-bg); border:0.5px solid var(--acc-bd); color:var(--acc)">
+      💧 צור והורד קובץ תזכורות ליומן
+    </button>
+  </div>`;
+  
+  document.getElementById('pg-nutr').innerHTML=h;
+  renderFLNutr(d);
+}
+
+function addWaterNutr(d, n) {
+  const l=getLog(d);
+  l.water=Math.max(0,(l.water||0)+n);
+  save();
+  const el=document.getElementById('water-n');
+  if(el)el.textContent=l.water;
+}
+
+function renderFLNutr(d) {
+  renderFL(d);
+}
+
+function downloadWaterCalendar() {
+  const hours = [8, 10, 12, 14, 16, 18, 20];
+  let ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//MyFit//Water Reminders//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH'
+  ];
+  
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  
+  hours.forEach((h, idx) => {
+    const startStr = `${y}${m}${d}T${String(h).padStart(2, '0')}0000`;
+    const endStr = `${y}${m}${d}T${String(h).padStart(2, '0')}1500`;
+    const stamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    
+    ics.push('BEGIN:VEVENT');
+    ics.push(`UID:water-reminder-${h}-${idx}@myfit`);
+    ics.push(`DTSTAMP:${stamp}`);
+    ics.push(`DTSTART;TZID=Asia/Jerusalem:${startStr}`);
+    ics.push(`DTEND;TZID=Asia/Jerusalem:${endStr}`);
+    ics.push('RRULE:FREQ=DAILY');
+    ics.push('SUMMARY:💧 זמן לשתות מים!');
+    ics.push('DESCRIPTION:תזכורת יומית מאפליקציית הכושר שלי לשמור על רוויה.');
+    ics.push('BEGIN:VALARM');
+    ics.push('ACTION:DISPLAY');
+    ics.push('DESCRIPTION:💧 זמן לשתות מים!');
+    ics.push('TRIGGER:-PT0M');
+    ics.push('END:VALARM');
+    ics.push('END:VEVENT');
+  });
+  
+  ics.push('END:VCALENDAR');
+  
+  const blob = new Blob([ics.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'water-reminders.ics';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ── Metrics Page Functions (📈 מדדים) ─────────────────
+function renderMetrics() {
+  const d=viewDay||getDay();
+  const log=getLog(d);
+  const lastWt=data.wt.length?[...data.wt].sort((a,b)=>a.d-b.d).pop().w:null;
+  
+  let h=`<div style="font-size:22px;font-weight:500;margin:4px 0 14px">📈 מדדי גוף ובריאות</div>`;
+  
+  // Daily inputs
+  h+=acc('b-metrics','📊 משקל · צעדים · שינה',`<div class="card" style="margin-bottom:0">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div><div style="font-size:11px;color:var(--txt3);margin-bottom:4px">⚖️ משקל</div><input type="number" step="0.1" placeholder="ק״ג" id="wtin" style="font-size:13px;padding:8px 10px" onchange="saveWt(this.value)"></div>
+      <div><div style="font-size:11px;color:var(--txt3);margin-bottom:4px">👟 צעדים</div><input type="number" placeholder="0" id="stin" style="font-size:13px;padding:8px 10px" onchange="saveSteps(this.value)"></div>
+      <div><div style="font-size:11px;color:var(--txt3);margin-bottom:4px">😴 שינה שע׳</div><input type="number" step="0.5" placeholder="0" id="spin" style="font-size:13px;padding:8px 10px" onchange="saveSleep(this.value)"></div>
+    </div></div>`,true);
+    
+  // Weight chart
+  let wch='';
+  if(data.wt.length){
+    const chart=weightChartSVG();const pts=[...data.wt].sort((a,b)=>a.d-b.d);
+    const diff=+(pts[pts.length-1].w-pts[0].w).toFixed(1);
+    wch=`<div class="card" style="margin-bottom:0;padding:14px 15px">`+(chart||'')+
+      (pts.length>1?`<div style="text-align:center;font-size:12px;color:var(--txt2);margin:${chart?'10px':'0'} 0 6px">שינוי כולל: <span style="color:${diff<0?'#5BD17F':diff>0?'#EF9F27':'var(--acc)'};font-weight:500">${diff>0?'+':''}${diff} ק״ג</span></div>`:'')+
+      `<div style="margin-top:6px">`+pts.slice().reverse().map(({d:x,w})=>`<div style="display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:0.5px solid var(--bdr)"><span style="color:var(--txt2)">יום ${x}</span><span style="color:var(--acc);font-weight:500">${w} ק״ג</span></div>`).join('')+`</div></div>`;
+  } else wch='<div style="font-size:12px;color:var(--txt3);padding:4px 2px">הזן משקל למעלה כדי לראות גרף.</div>';
+  h+=acc('b-weight','📈 מעקב משקל',wch,false);
+
+  // BMI
+  let bmiHtml='<div class="card" style="margin-bottom:0;padding:14px 15px">';
+  if(!data.height){
+    bmiHtml+=`<div style="font-size:12px;color:var(--txt2);margin-bottom:8px">הזן את הגובה שלך (ס״מ):</div><div style="display:flex;gap:6px"><input type="number" id="hin" placeholder="לדוגמה 178" style="flex:1"><button onclick="saveHeightMetrics(document.getElementById('hin').value)" style="background:var(--acc2);border:none;color:#fff;padding:10px 16px">שמור</button></div>`;
+  } else if(!lastWt){
+    bmiHtml+=`<div style="font-size:12px;color:var(--txt2)">גובה: ${data.height} ס״מ. הזן משקל כדי לחשב BMI. <button onclick="data.height=null;save();renderMetrics()" style="font-size:11px;padding:3px 8px;border-radius:14px;margin-right:6px">שנה גובה</button></div>`;
+  } else {
+    const bmi=lastWt/Math.pow(data.height/100,2);
+    const cat=bmi<18.5?['תת-משקל','#EF9F27']:bmi<25?['תקין','#5BD17F']:bmi<30?['עודף משקל','#EF9F27']:['השמנה','#E24B4A'];
+    bmiHtml+=`<div style="display:flex;align-items:center;justify-content:space-between"><div><div style="font-size:30px;font-weight:700;color:${cat[1]}">${bmi.toFixed(1)}</div><div style="font-size:12px;color:${cat[1]}">${cat[0]}</div></div><div style="text-align:left;font-size:11px;color:var(--txt3)">משקל ${lastWt} ק״ג · גובה ${data.height} ס״מ<br><button onclick="data.height=null;save();renderMetrics()" style="font-size:11px;padding:3px 8px;border-radius:14px;margin-top:6px">שנה גובה</button></div></div>`;
+  }
+  bmiHtml+='</div>';
+  h+=acc('b-bmi','⚖️ BMI',bmiHtml,false);
+  
+  // Beginner Nutrition & Health Guide
+  h+=`<div class="sec">📖 מדריך בריאות ותזונה למתחילים</div>
+  
+  <!-- TDEE Guide Card -->
+  <div class="card" style="margin-bottom:8px">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+      <span style="font-size:20px;">⚖️</span>
+      <div style="font-size:14px; font-weight:600; color:var(--acc)">מה זה TDEE ואיך הגוף שורף קלוריות?</div>
+    </div>
+    <div style="font-size:12px; color:var(--txt2); line-height:1.6; display:flex; flex-direction:column; gap:6px;">
+      <p>הגוף שלך שורף קלוריות בכל שניה כדי להתקיים (נשימה, זרימת דם וכו') - זה נקרא BMR.</p>
+      <p>כאשר מוסיפים לזה את הפעילות היומית (צעדים, אימונים, עבודה), מתקבל ה-<b>TDEE</b>: סך כל האנרגיה שהגוף שלך מוציא ביממה.</p>
+      <div style="background:var(--bg3); border-radius:8px; padding:8px 10px; font-size:11px; color:var(--acc); margin-top:4px;">
+        💡 <b>נוסחה קלה להערכה:</b> משקל הגוף שלך כפול 30 עד 33 ייתן את כמות הקלוריות שאתה שורף ביום ממוצע.
+      </div>
+    </div>
+  </div>
+
+  <!-- Caloric Deficit/Surplus Guide Card -->
+  <div class="card" style="margin-bottom:8px">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+      <span style="font-size:20px;">🔥</span>
+      <div style="font-size:14px; font-weight:600; color:var(--acc)">גרעון קלורי לעומת עודף קלורי</div>
+    </div>
+    <div style="font-size:12px; color:var(--txt2); line-height:1.6; display:flex; flex-direction:column; gap:6px;">
+      <p>כדי לשנות את הרכב הגוף, עליך לשלוט במאזן הקלורי היומי בהתאם למטרה שלך:</p>
+      <div style="display:flex; flex-direction:column; gap:6px; margin-top:4px;">
+        <div style="padding:8px 10px; background:rgba(239,159,39,0.08); border:0.5px solid rgba(239,159,39,0.25); border-radius:8px;">
+          <b style="color:#EF9F27;">📉 גרעון קלורי (חיטוב וירידה באחוז השומן):</b>
+          <div style="margin-top:2px;">אכול פחות קלוריות ממה שאתה מוציא (כ-300-500 קלוריות פחות מה-TDEE). הגוף ייאלץ להשתמש בשומן כמקור אנרגיה.</div>
+        </div>
+        <div style="padding:8px 10px; background:rgba(91,209,127,0.08); border:0.5px solid rgba(91,209,127,0.25); border-radius:8px;">
+          <b style="color:#5BD17F;">📈 עודף קלורי (מסה ובניית שריר):</b>
+          <div style="margin-top:2px;">אכול מעט יותר ממה שאתה מוציא (עודף מבוקר של כ-200-300 קלוריות) לצד אימוני כוח כדי לתת לשריר דלק להיבנות.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Macros Guide Card -->
+  <div class="card" style="margin-bottom:8px">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+      <span style="font-size:20px;">🍗</span>
+      <div style="font-size:14px; font-weight:600; color:var(--acc)">אבות המזון - מה מומלץ לאכול?</div>
+    </div>
+    <div style="font-size:12px; color:var(--txt2); line-height:1.6; display:flex; flex-direction:column; gap:6px;">
+      <p>הקלוריות מחולקות לשלושה אבות מזון עיקריים שמרכיבים את התזונה שלנו:</p>
+      <ul style="padding-right:16px; display:flex; flex-direction:column; gap:4px;">
+        <li><b style="color:var(--txt);">חלבון (אבן הבניין של השריר):</b> הכי קריטי להתאוששות ובניית שריר. מומלץ לצרוך <b>1.6 עד 2.2 גרם</b> חלבון לכל ק"ג משקל גוף. (מקורות: ביצים, קוטג׳, עוף, טונה, בשר).</li>
+        <li><b style="color:var(--txt);">פחמימות (הדלק של הגוף):</b> נותנות אנרגיה לאימונים קשים ושומרות על רמת הביצועים. (מקורות: שיבולת שועל, אורז, תפוחי אדמה, לחם מלא).</li>
+        <li><b style="color:var(--txt);">שומנים בריאים (תפקוד הורמונלי):</b> חיוניים לייצור הורמונים בריאים, ספיגת ויטמינים ותפקוד המוח. (מקורות: טחינה, שמן זית, אבוקדו, אגוזים).</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Hydration Guide Card -->
+  <div class="card" style="margin-bottom:12px">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+      <span style="font-size:20px;">💦</span>
+      <div style="font-size:14px; font-weight:600; color:var(--acc)">חשיבות המים והשינה להתאוששות</div>
+    </div>
+    <div style="font-size:12px; color:var(--txt2); line-height:1.6; display:flex; flex-direction:column; gap:6px;">
+      <p>ללא מנוחה מספקת ושתייה, הגוף לא יוכל לבנות שריר או לשרוף שומן ביעילות:</p>
+      <ul style="padding-right:16px; display:flex; flex-direction:column; gap:4px;">
+        <li><b>מים:</b> מומלץ לשתות לפחות 2.5-3 ליטר ביום. מים עוזרים להעביר חומרי תזונה לשרירים ומונעים עייפות.</li>
+        <li><b>שינה:</b> השריר נבנה בשינה ולא בזמן האימונים. כוון ל-7-8 שעות שינה איכותיות בלילה.</li>
+      </ul>
+    </div>
+  </div>`;
+
+  document.getElementById('pg-metrics').innerHTML=h;
+  
+  const wi=document.getElementById('wtin');if(wi&&log.wt)wi.value=log.wt;
+  const si=document.getElementById('stin');if(si&&log.steps)si.value=log.steps;
+  const spi=document.getElementById('spin');if(spi&&log.sleep)spi.value=log.sleep;
+}
+
+function saveHeightMetrics(v) {
+  data.height=v?parseFloat(v):null;
+  save();
+  renderMetrics();
+}
+
 
 function renderSetRows(setsN,repsStr,weight,key,isTimed,setDur){
   let h='';
@@ -800,7 +1044,7 @@ function getAchievements(){
 
 // ── Live comparison (Firebase Realtime DB REST) ───────
 // Paste your free Firebase DB URL into FB.url (see FIREBASE_SETUP.txt). Until then, no data leaves the device.
-const FB={url:'PASTE_FIREBASE_URL_HERE', me:'omer', other:'tom'};
+const FB={url:'https://karby-fit-default-rtdb.europe-west1.firebasedatabase.app', me:'omer', other:'tom'};
 const FB_NAMES={tom:'תום', omer:'עומר'};
 function fbReady(){return FB.url && !/PASTE_|YOUR-PROJECT/i.test(FB.url);}
 function myStats(){
@@ -1005,12 +1249,39 @@ function renderFL(d){
 }
 
 // ── Progress ──────────────────────────────────────────
+function monthCalHTML(){
+  const now=new Date();const year=now.getFullYear(),mo=now.getMonth(),todayD=now.getDate();
+  const startDow=new Date(year,mo,1).getDay();
+  const daysInMonth=new Date(year,mo+1,0).getDate();
+  const trained={};Object.values(data.logs).forEach(l=>{if(l.done&&l.doneAt){const dt=new Date(l.doneAt);if(dt.getFullYear()===year&&dt.getMonth()===mo)trained[dt.getDate()]=true;}});
+  let h=`<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">`;
+  ['א','ב','ג','ד','ה','ו','ש'].forEach(x=>h+=`<div style="text-align:center;font-size:10px;color:var(--txt3);padding-bottom:2px">${x}</div>`);
+  for(let i=0;i<startDow;i++)h+=`<div></div>`;
+  for(let day=1;day<=daysInMonth;day++){
+    const tr=trained[day],isToday=day===todayD;
+    h+=`<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:9px;font-size:12px;background:${tr?'var(--acc2)':'var(--bg3)'};color:${tr?'#fff':'var(--txt3)'};${isToday?'outline:2px solid var(--acc);outline-offset:-1px':''}">${tr?'✓':day}</div>`;
+  }
+  return h+'</div>';
+}
+
+// ── Dino pet: 10 stages by THIS month's workouts (resets monthly) ──
+const DINO_T=[0,1,2,3,5,8,11,14,18,22]; // min workouts for stage 1..10
+const DINO_NM=['הביצה ישנה 🥚','הביצה נסדקה!','מציץ החוצה 👀','בקע! 🐣','תינוק דינו','דינו צעיר','דינו נער','דינו בוגר 💪','טיטאן! 🦖','אלוף! 👑'];
+function dinoMonth(){const y=new Date().getFullYear(),m=new Date().getMonth();let n=0;Object.values(data.logs).forEach(l=>{if(l.done&&l.doneAt){const dt=new Date(l.doneAt);if(dt.getFullYear()===y&&dt.getMonth()===m)n++;}});return n;}
+function dinoStage(n){let s=0;for(let i=0;i<DINO_T.length;i++)if(n>=DINO_T[i])s=i;return s;} // 0..9
+function dinoData(){
+  const n=dinoMonth(),s=dinoStage(n),file=String(s+1).padStart(2,'0');
+  const next=s<9?DINO_T[s+1]:null,left=next!==null?next-n:0;
+  const sub=next!==null?`עוד ${left} ${left===1?'אימון':'אימונים'} והוא יתפתח →`:'הגעת לשיא! 🏆';
+  const lo=DINO_T[s],hi=next!==null?next:lo+1;
+  const pct=next!==null?Math.round((n-lo)/(hi-lo)*100):100;
+  return {file,name:DINO_NM[s],sub,pct,n};
+}
+
 function renderProg(){
   const d=getDay();
   const done=SCHED.filter(({d:x})=>getLog(x).done).length;
   const streak=getStreak();const pct=Math.round(done/30*100);
-  const accColors={upper:'rgba(175,169,236,0.2)',lower:'rgba(127,119,221,0.2)',core:'rgba(83,74,183,0.2)',rest:'rgba(100,100,100,0.15)'};
-  const bdColors={upper:'rgba(175,169,236,0.45)',lower:'rgba(127,119,221,0.45)',core:'rgba(83,74,183,0.45)',rest:'rgba(100,100,100,0.3)'};
 
   let h=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
     <div class="stat"><div class="stat-n">${done}</div><div class="stat-l">ימים הושלמו</div></div>
@@ -1034,22 +1305,14 @@ function renderProg(){
     <div style="font-size:13px;color:var(--acc)">${msg}</div>
   </div>`;
 
-  h+=`<div class="sec">מפת ימים</div>
-  <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-bottom:16px">`;
+  // Real monthly calendar
+  h+=`<div class="sec">📅 ${MONTHS[new Date().getMonth()]} ${new Date().getFullYear()}</div><div class="card">${monthCalHTML()}</div>`;
 
-  SCHED.forEach(({d:x,t})=>{
-    const dn=getLog(x).done;const isCur=x===d;
-    h+=`<div class="hmc" style="background:${dn?'rgba(175,169,236,0.3)':accColors[t]};border:1px solid ${dn?'rgba(175,169,236,0.6)':bdColors[t]};${isCur?'outline:2px solid var(--acc);outline-offset:1px':''};color:${dn?'var(--acc)':'var(--txt3)'}">
-      ${dn?'✓':x}
-    </div>`;
-  });
-  h+='</div>';
-
-  // Achievements
-  h+=`<div class="sec">🏆 הישגים</div>
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">`;
-  getAchievements().forEach(a=>{h+=`<div class="badge ${a.un?'un':'lk'}"><div class="badge-i">${a.i}</div><div class="badge-t">${a.t}</div></div>`;});
-  h+='</div>';
+  // Achievements (collapsible)
+  let abody=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">`;
+  getAchievements().forEach(a=>{abody+=`<div class="badge ${a.un?'un':'lk'}"><div class="badge-i">${a.i}</div><div class="badge-t">${a.t}</div></div>`;});
+  abody+='</div>';
+  h+=acc('p-ach','🏆 הישגים',abody,false);
 
   // Live comparison
   h+=`<div class="sec">🤝 השוואה מול ${FB_NAMES[FB.other]}</div><div class="card" id="cmp-wrap"></div>`;
@@ -1087,41 +1350,8 @@ function renderProg(){
     h+='</div>';
   }
 
-  if(data.wt.length){
-    const chart=weightChartSVG();
-    h+=`<div class="sec">⚖️ משקל</div><div class="card" style="padding:14px 15px">`;
-    if(chart)h+=chart;
-    const pts=[...data.wt].sort((a,b)=>a.d-b.d);
-    const diff=+(pts[pts.length-1].w-pts[0].w).toFixed(1);
-    if(pts.length>1)h+=`<div style="text-align:center;font-size:12px;color:var(--txt2);margin:${chart?'10px':'0'} 0 6px">שינוי כולל: <span style="color:${diff<0?'#5BD17F':diff>0?'#EF9F27':'var(--acc)'};font-weight:500">${diff>0?'+':''}${diff} ק״ג</span></div>`;
-    h+=`<div style="margin-top:6px">`;
-    pts.slice().reverse().forEach(({d:x,w})=>{
-      h+=`<div style="display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-bottom:0.5px solid var(--bdr)"><span style="color:var(--txt2)">יום ${x}</span><span style="color:var(--acc);font-weight:500">${w} ק״ג</span></div>`;
-    });
-    h+='</div></div>';
-  }
-
-  // BMI
-  const lastWt=data.wt.length?[...data.wt].sort((a,b)=>a.d-b.d).pop().w:null;
-  h+=`<div class="sec">⚖️ BMI</div><div class="card" style="padding:14px 15px">`;
-  if(!data.height){
-    h+=`<div style="font-size:12px;color:var(--txt2);margin-bottom:8px">הזן את הגובה שלך (ס״מ) כדי לחשב BMI:</div>
-      <div style="display:flex;gap:6px"><input type="number" id="hin" placeholder="לדוגמה 178" style="flex:1"><button onclick="saveHeight(document.getElementById('hin').value)" style="background:var(--acc2);border:none;color:#fff;padding:10px 16px">שמור</button></div>`;
-  } else if(!lastWt){
-    h+=`<div style="font-size:12px;color:var(--txt2)">גובה: ${data.height} ס״מ. הזן משקל בטאב האימון כדי לחשב BMI. <button onclick="data.height=null;save();renderProg()" style="font-size:11px;padding:3px 8px;border-radius:14px;margin-right:6px">שנה גובה</button></div>`;
-  } else {
-    const bmi=lastWt/Math.pow(data.height/100,2);
-    const cat=bmi<18.5?['תת-משקל','#EF9F27']:bmi<25?['תקין','#5BD17F']:bmi<30?['עודף משקל','#EF9F27']:['השמנה','#E24B4A'];
-    h+=`<div style="display:flex;align-items:center;justify-content:space-between">
-      <div><div style="font-size:30px;font-weight:700;color:${cat[1]}">${bmi.toFixed(1)}</div><div style="font-size:12px;color:${cat[1]}">${cat[0]}</div></div>
-      <div style="text-align:left;font-size:11px;color:var(--txt3)">משקל ${lastWt} ק״ג · גובה ${data.height} ס״מ<br><button onclick="data.height=null;save();renderProg()" style="font-size:11px;padding:3px 8px;border-radius:14px;margin-top:6px">שנה גובה</button></div>
-    </div>`;
-  }
-  h+='</div>';
-
-  // Progress photos + videos
-  h+=`<div class="sec">📸🎥 תמונות וסרטונים</div>
-  <div class="card">
+  // Progress photos + videos (hidden behind a tap for privacy)
+  const mediaBody=`<div class="card" style="margin-bottom:0">
     <div id="ph-wrap" style="margin-bottom:10px"></div>
     <div style="display:flex;gap:7px">
       <button onclick="pickPhoto()" style="flex:1;padding:10px;border-radius:11px;font-size:13px;background:var(--acc-bg);border-color:var(--acc-bd);color:var(--acc)">📸 תמונה</button>
@@ -1129,6 +1359,7 @@ function renderProg(){
     </div>
     <div style="font-size:10px;color:var(--txt3);margin-top:7px;text-align:center">★ על תמונה = הופך אותה לתמונת החודש ביומן</div>
   </div>`;
+  h+=acc('p-media','📸🎥 תמונות וסרטונים · מוסתר 🔒',mediaBody,false);
 
   // Yearly calendar
   h+=`<div class="sec">📅 יומן שנתי ${new Date().getFullYear()}</div>
