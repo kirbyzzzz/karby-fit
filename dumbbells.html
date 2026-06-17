@@ -505,24 +505,25 @@ function saveSleep(v){const d=viewDay||getDay();getLog(d).sleep=v?+v:null;save()
 // ── Nav ────────────────────────────────────────────────
 let viewDay=null;
 function gotoTab(tab){
+  if(tab==='nutr')renderNutr();
+  if(tab==='metrics')renderMetrics();
+  if(tab==='prog')renderProg();
+
   document.getElementById('pg-today').style.display=tab==='today'?'block':'none';
   document.getElementById('pg-nutr').style.display=tab==='nutr'?'block':'none';
   document.getElementById('pg-metrics').style.display=tab==='metrics'?'block':'none';
   document.getElementById('pg-prog').style.display=tab==='prog'?'block':'none';
-  
+
   document.getElementById('btn-today').className='tb'+(tab==='today'?' on':'');
   document.getElementById('btn-nutr').className='tb'+(tab==='nutr'?' on':'');
   document.getElementById('btn-metrics').className='tb'+(tab==='metrics'?' on':'');
   document.getElementById('btn-prog').className='tb'+(tab==='prog'?' on':'');
-  
+
   if(tab==='today'){
     if(!document.getElementById('pg-today').firstElementChild)renderToday();
     else document.querySelectorAll('#pg-today .dvid').forEach(v=>{v.play().catch(()=>{});});
   }
   if(tab!=='today')window.scrollTo(0,0);
-  if(tab==='nutr')renderNutr();
-  if(tab==='metrics')renderMetrics();
-  if(tab==='prog')renderProg();
 }
 // ── Collapsible accordion ─────────────────────────────
 function acc(id,title,body,open){
@@ -906,8 +907,10 @@ function renderSetRows(setsN,repsStr,weight,key,isTimed,setDur){
 
 function toggleEx(id){
   const b=document.getElementById(id+'b'),arr=document.getElementById(id+'arr');
-  if(b.classList.contains('open')){b.classList.remove('open');if(arr)arr.style.transform='';}
-  else{b.classList.add('open');if(arr)arr.style.transform='rotate(90deg)';}
+  const wasOpen=b.classList.contains('open');
+  document.querySelectorAll('#pg-today .ex-body').forEach(el=>el.classList.remove('open'));
+  document.querySelectorAll('#pg-today [id$="arr"]').forEach(el=>el.style.transform='');
+  if(!wasOpen){b.classList.add('open');if(arr)arr.style.transform='rotate(90deg)';}
 }
 function toggleDone(d){const l=getLog(d);const was=l.done;l.done=!l.done;if(!was&&l.done)l.doneAt=Date.now();save();renderToday();if(!was&&l.done){celebrate();publishStats();setTimeout(()=>promptProgressPhoto(),700);}}
 

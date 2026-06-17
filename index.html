@@ -381,8 +381,13 @@ function updateGW(){
   const tgt=document.getElementById('gw-target');
   if(tgt)tgt.textContent=p.timed?`🧘 החזק ${p.reps}`:`💪 ${p.reps} חזרות`;
   const btn=document.getElementById('gw-btn');
-  btn.textContent=p.timed?`▶ התחל החזקה (${p.hold}ש׳)`:'✓ סיימתי את הסט';
+  btn.textContent=p.timed?`▶ התחל החזקה (${p.hold}ש׳)`:'✓ סיימתי סט';
   btn.onclick=p.timed?gDoTimed:gAfterSet;
+  const gif=G.exs[G.ei].ex.gif;
+  const gw=document.getElementById('gw-gif-wrap');
+  const gi=document.getElementById('gw-gif');
+  if(gif&&gw&&gi){gw.style.display='block';gi.src=gif;}
+  else if(gw)gw.style.display='none';
 }
 function startGuided(){
   const d=viewDay||getDay();const {t}=SCHED[d-1];
@@ -474,24 +479,26 @@ function toggleSwap(id){const e=document.getElementById(id+'swap');if(e)e.style.
 
 let viewDay=null;
 function gotoTab(tab){
+  // Render into hidden divs first so there's no visible flash when they appear
+  if(tab==='nutr')renderNutr();
+  if(tab==='metrics')renderMetrics();
+  if(tab==='prog')renderProg();
+
   document.getElementById('pg-today').style.display=tab==='today'?'block':'none';
   document.getElementById('pg-nutr').style.display=tab==='nutr'?'block':'none';
   document.getElementById('pg-metrics').style.display=tab==='metrics'?'block':'none';
   document.getElementById('pg-prog').style.display=tab==='prog'?'block':'none';
-  
+
   document.getElementById('btn-today').className='tb'+(tab==='today'?' on':'');
   document.getElementById('btn-nutr').className='tb'+(tab==='nutr'?' on':'');
   document.getElementById('btn-metrics').className='tb'+(tab==='metrics'?' on':'');
   document.getElementById('btn-prog').className='tb'+(tab==='prog'?' on':'');
-  
+
   if(tab==='today'){
     if(!document.getElementById('pg-today').firstElementChild)renderToday();
     else document.querySelectorAll('#pg-today .dvid').forEach(v=>{v.play().catch(()=>{});});
   }
   if(tab!=='today')window.scrollTo(0,0);
-  if(tab==='nutr')renderNutr();
-  if(tab==='metrics')renderMetrics();
-  if(tab==='prog')renderProg();
 }
 
 // ── Render Today ──────────────────────────────────────
@@ -530,13 +537,16 @@ function renderToday(){
 
   // Guided widget
   h+=`<div id="gw">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <div id="gw-info" style="font-size:11px;color:var(--acc)"></div>
       <button onclick="stopGuided()" style="border:none;background:transparent;color:var(--txt3);font-size:12px;padding:2px 6px">✕</button>
     </div>
-    <div id="gw-name" style="font-size:16px;font-weight:500;margin-bottom:2px"></div>
-    <div id="gw-target" style="font-size:13px;color:var(--acc);margin-bottom:10px"></div>
-    <button id="gw-btn" style="width:100%;padding:13px;border-radius:12px;font-size:15px;font-weight:500;background:var(--acc2);border:none;color:#fff"></button>
+    <div id="gw-gif-wrap" style="display:none;border-radius:12px;overflow:hidden;margin-bottom:10px;background:var(--bg3);border:0.5px solid var(--bdr)">
+      <img id="gw-gif" src="" style="width:100%;max-height:180px;object-fit:contain;display:block">
+    </div>
+    <div id="gw-name" style="font-size:18px;font-weight:600;margin-bottom:3px"></div>
+    <div id="gw-target" style="font-size:14px;color:var(--acc);margin-bottom:14px"></div>
+    <button id="gw-btn" style="width:100%;padding:20px;border-radius:16px;font-size:18px;font-weight:700;background:var(--acc2);border:none;color:#fff;letter-spacing:0.3px"></button>
   </div>`;
 
   // Warmup
@@ -655,8 +665,10 @@ function renderToday(){
 
 function toggleEx(id){
   const b=document.getElementById(id+'b'),arr=document.getElementById(id+'arr');
-  if(b.classList.contains('open')){b.classList.remove('open');if(arr)arr.style.transform='';}
-  else{b.classList.add('open');if(arr)arr.style.transform='rotate(90deg)';}
+  const wasOpen=b.classList.contains('open');
+  document.querySelectorAll('#pg-today .ex-body').forEach(el=>el.classList.remove('open'));
+  document.querySelectorAll('#pg-today [id$="arr"]').forEach(el=>el.style.transform='');
+  if(!wasOpen){b.classList.add('open');if(arr)arr.style.transform='rotate(90deg)';}
 }
 
 function toggleDone(d){const l=getLog(d);const was=l.done;l.done=!l.done;if(!was&&l.done)l.doneAt=Date.now();save();renderToday();if(!was&&l.done){celebrate();publishStats();setTimeout(()=>promptProgressPhoto(true),700);}}
